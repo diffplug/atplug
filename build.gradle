@@ -1,10 +1,25 @@
-plugins {
-	// code formatting
-	id "com.diffplug.gradle.spotless" version "2.0.0"
-	// github pages
-	id "org.ajoberstar.github-pages" version "1.4.2"
+buildscript {
+	repositories {
+		maven { url "https://plugins.gradle.org/m2/" }
+	}
+	dependencies {
+		// osgi and eclipse projects
+		classpath "com.diffplug.gradle:goomph:${VER_GOOMPH}"
+		// code formatting
+		classpath "com.diffplug.gradle.spotless:spotless:${VER_SPOTLESS}"
+		// markdown in javadoc and syntax highlighting
+		classpath "ch.raffael.pegdown-doclet:pegdown-doclet:${VER_PEGDOWN_DOCLET}"
+		// bintray uploading
+		classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:${VER_BINTRAY}"
+		// github pages javadoc upload
+		classpath "org.ajoberstar:gradle-git:${VER_GRADLE_GIT}"
+	}
 }
 
+/////////////////
+// CODE FORMAT //
+/////////////////
+apply plugin: 'com.diffplug.gradle.spotless'
 spotless {
 	java {
 		target fileTree('.') {
@@ -30,5 +45,72 @@ spotless {
 		target rootProject.fileTree('.') {
 			include '**/*.md'
 		}
+	}
+}
+
+//////////////////////////
+// ROOT ECLIPSE PROJECT //
+//////////////////////////
+apply plugin: 'com.diffplug.gradle.eclipse.resourcefilters'
+eclipseResourceFilters {
+	exclude().folders().name('gradle-plugin')
+	exclude().folders().name('lib-runtime')
+}
+
+/////////////////
+// SUBPROJECTS //
+/////////////////
+subprojects {
+	////////////////
+	// JAVA SETUP //
+	////////////////
+	apply plugin: 'java'
+	sourceCompatibility = VER_JAVA
+	targetCompatibility = VER_JAVA
+	sourceSets {
+		main.java.srcDir 'src'
+		test.java.srcDir 'test'
+	}
+	repositories {
+		mavenCentral()
+	}
+
+	/////////////////////
+	// ECLIPSE PROJECT //
+	/////////////////////
+	apply plugin: 'eclipse'
+	eclipse {
+		classpath {
+			downloadSources true
+			downloadJavadoc true
+		}
+	}
+	// always create fresh projects
+	tasks.eclipse.dependsOn(cleanEclipse)
+
+	//////////////
+	// FINDBUGS //
+	//////////////
+	apply plugin: 'findbugs'
+	findbugs {
+		toolVersion = VER_FINDBUGS
+		sourceSets = [sourceSets.main]	// don't check the test code
+		ignoreFailures = false 	// bug free or it doesn't ship!
+		reportsDir = file('build/findbugs')
+		effort = 'max'			// min|default|max
+		reportLevel = 'high'	// low|medium|high (low = sensitive to even minor mistakes)
+		omitVisitors = []		// bugs that we want to ignore
+	}
+	// HTML instead of XML
+	tasks.withType(FindBugs) {
+		reports {
+			xml.enabled = false
+			html.enabled = true
+		}
+	}
+	// we'll want the findbugs annotations (they don't have a 3.0.1 version)
+	dependencies {
+		compileOnly 'com.google.code.findbugs:annotations:3.0.0'
+		compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
 	}
 }

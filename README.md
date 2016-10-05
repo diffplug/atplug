@@ -158,7 +158,7 @@ To use the plugin system, all you have to do is:
 Menu root = new Menu();
 List<File> files = Arrays.asList(new File("Budget.docx"));
 for (FileMenu.Descriptor descriptor : FileMenu.Descriptor.getFor(files)) {
-	descriptor.openManaged(instance - > {
+	descriptor.openManaged(instance -> {
 		instance.addRightClick(root, files);
 	});
 }

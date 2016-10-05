@@ -1,0 +1,12 @@
+apply plugin: 'java'
+sourceCompatibility = VER_JAVA
+targetCompatibility = VER_JAVA
+
+dependencies {
+	// osgi
+	compile "org.eclipse:osgi:${VER_OSGI}"
+	// immutable data structures
+	compile "com.diffplug.durian:durian-collect:${VER_DURIAN}"
+	// testing
+	testCompile "junit:junit:${VER_JUNIT}"
+}

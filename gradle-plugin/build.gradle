@@ -1,0 +1,12 @@
+apply plugin: 'java-gradle-plugin'
+// make sure the eclipse task always has up-to-date metadata
+tasks.eclipse.dependsOn(pluginUnderTestMetadata)
+
+dependencies {
+	// javaexec
+	compile "com.diffplug.gradle:goomph:${VER_GOOMPH}"
+	// asm
+	compile "org.ow2.asm:asm:${VER_ASM}"
+	// testing
+	testCompile "junit:junit:${VER_JUNIT}"
+}
