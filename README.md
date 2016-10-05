@@ -1,4 +1,4 @@
-# <img align="left" src="_images/logo_160.png"> AutOSGi: Sockets and Plugs without boilerplate
+# <img align="left" src="_images/logo_128.png"> AutOSGi: Sockets and Plugs without boilerplate
 
 <!---freshmark shields
 output = [
@@ -27,7 +27,7 @@ output = [
 output = prefixDelimiterReplace(input, 'https://{{org}}.github.io/{{name}}/javadoc/', '/', stable);
 -->
 
-AutOSGi is...
+## AutOSGi is...
 
 - a plugin system for the JVM
 - that generates all OSGi metadata for you - write Java code, not error-prone metadata
@@ -35,12 +35,14 @@ AutOSGi is...
 	+ No need for OSGi in small systems (e.g. unit tests)
 	+ Take full advantage of OSGi's power in large systems
 
-It has two components:
+AutOSGi has two components:
 
-- a buildtime step which generates OSGi declarative service metadata
 - a small runtime (less than 1000 lines) which allows seamless operation inside and outside of OSGi
+- a buildtime step which generates OSGi declarative service metadata
+	+ Gradle plugin: [`com.diffplug.gradle.autosgi`](https://plugins.gradle.org/plugin/com.diffplug.gradle.autosgi)
+	+ Contributions welcome for maven, ant, etc.
 
-It is currently in production usage at [DiffPlug](https://www.diffplug.com), but extracting it into an opensource project is currently WIP.  Will reach 1.0 by Devoxx US (March 2017).
+It is currently in production usage at [DiffPlug](https://www.diffplug.com); extracting it into an opensource project is a WIP.  Will reach 1.0 by Devoxx US (March 2017).
 
 ## How it works
 
@@ -53,9 +55,9 @@ public interface FileMenu {
 }
 ```
 
-Let's say our system has 100 different `FileMenu` plugins.  Loading all 100 plugins will take a long time, so we'd like to describe which files a given `FileMenu` applies to without having to actually load it.  The simplest way would be if each `FileMenu` declared which file extensions it is applicable to.
+Let's say our system has 100 different `FileMenu` plugins.  Loading all 100 plugins will take a long time, so we'd like to describe which files a given `FileMenu` applies to without having to actually load it.  One way would be if each `FileMenu` declared which file extensions it is applicable to.
 
-We can accomplish this in AutOSGi by adding a method marked with `@Metadata`.  The annotation is a documentation hint that this method should return a constant value which will be used to generate static metadata about the plugin.
+We can accomplish this in AutOSGi by adding a method to the socket interface marked with `@Metadata`.  The annotation is a documentation hint that this method should return a constant value which will be used to generate static metadata about the plugin.
 
 ```java
 public interface FileMenu {
