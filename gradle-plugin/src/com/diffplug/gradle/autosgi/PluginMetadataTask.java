@@ -55,9 +55,13 @@ public class PluginMetadataTask extends DefaultTask {
 		Map<String, String> result = generate();
 
 		// clean out the osgiInf folder, and put the map's content into the folder
-		FileMisc.cleanDir(osgiInfFolder);
-		for (Map.Entry<String, String> entry : result.entrySet()) {
-			Files.write(osgiInfFolder.toPath().resolve(entry.getKey() + PluginMetadataPlugin.DOT_XML), entry.getValue().getBytes(StandardCharsets.UTF_8));
+		if (result.isEmpty()) {
+			FileMisc.forceDelete(osgiInfFolder);
+		} else {
+			FileMisc.cleanDir(osgiInfFolder);
+			for (Map.Entry<String, String> entry : result.entrySet()) {
+				Files.write(osgiInfFolder.toPath().resolve(entry.getKey() + PluginMetadataPlugin.DOT_XML), entry.getValue().getBytes(StandardCharsets.UTF_8));
+			}
 		}
 	}
 

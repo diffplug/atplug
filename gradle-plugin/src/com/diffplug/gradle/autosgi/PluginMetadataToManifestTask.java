@@ -38,10 +38,12 @@ public class PluginMetadataToManifestTask extends DefaultTask {
 	@TaskAction
 	public void build() throws Throwable {
 		StringBuilder builder = new StringBuilder();
-		for (File file : FileMisc.list(osgiInfFolder)) {
-			if (file.getName().endsWith(PluginMetadataPlugin.DOT_XML)) {
-				builder.append(PluginMetadataPlugin.OSGI_INF + file.getName());
-				builder.append(",");
+		if (osgiInfFolder.exists()) {
+			for (File file : FileMisc.list(osgiInfFolder)) {
+				if (file.getName().endsWith(PluginMetadataPlugin.DOT_XML)) {
+					builder.append(PluginMetadataPlugin.OSGI_INF + file.getName());
+					builder.append(",");
+				}
 			}
 		}
 		if (builder.length() > 0) {
