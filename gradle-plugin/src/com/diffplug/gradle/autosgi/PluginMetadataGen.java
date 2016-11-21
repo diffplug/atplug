@@ -136,7 +136,7 @@ public class PluginMetadataGen {
 		}
 	}
 
-	private static final String PLUG = "Lcom/diffplug/plugin/Plug;";
+	private static final String PLUG = "Lcom/diffplug/autosgi/Plug;";
 
 	static String asmToJava(String className) {
 		return className.replace("/", ".");
