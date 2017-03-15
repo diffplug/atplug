@@ -42,7 +42,7 @@ AutOSGi has two components:
 	+ Gradle plugin: [`com.diffplug.gradle.autosgi`](https://plugins.gradle.org/plugin/com.diffplug.gradle.autosgi)
 	+ Contributions welcome for maven, ant, etc.
 
-It is currently in production usage at [DiffPlug](https://www.diffplug.com); extracting it into an opensource project is a WIP.  Will reach 1.0 by Devoxx US (March 2017).
+It is currently in production usage at [DiffPlug](https://www.diffplug.com); extracting it into an opensource project is a WIP.
 
 ## How it works
 
