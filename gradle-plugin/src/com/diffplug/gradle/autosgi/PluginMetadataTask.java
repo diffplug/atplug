@@ -22,6 +22,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 import com.diffplug.common.base.Unhandled;
@@ -31,22 +35,32 @@ import com.diffplug.gradle.JavaExecable;
 public class PluginMetadataTask extends DefaultTask {
 	static final String TASK_NAME = "pluginMetadata";
 
-	private File toSearch;
-	private Set<File> toLinkAgainst;
-	private File osgiInfFolder;
-	private JavaExecable.Mode jvmMode;
+	@InputDirectory
+	public File classesFolder;
 
-	public void init(File toSearch, Set<File> toLinkAgainst, File osgiInfFolder, JavaExecable.Mode jvmMode) {
-		// store the arguments
-		this.toSearch = toSearch;
-		this.toLinkAgainst = toLinkAgainst;
-		this.osgiInfFolder = osgiInfFolder;
-		this.jvmMode = jvmMode;
+	public File getClassesFolder() {
+		return classesFolder;
+	}
 
-		// set task input/output data
-		getInputs().dir(toSearch);
-		toLinkAgainst.forEach(getInputs()::file);
-		getOutputs().dir(osgiInfFolder);
+	@InputFiles
+	public Set<File> jarsToLinkAgainst;
+
+	public Set<File> getJarsToLinkAgainst() {
+		return jarsToLinkAgainst;
+	}
+
+	@Input
+	public JavaExecable.Mode jvmMode;
+
+	public JavaExecable.Mode getJvmMode() {
+		return jvmMode;
+	}
+
+	@OutputDirectory
+	public File osgiInfFolder;
+
+	public File getOsgiInfFolder() {
+		return osgiInfFolder;
 	}
 
 	@TaskAction
@@ -68,9 +82,9 @@ public class PluginMetadataTask extends DefaultTask {
 	private Map<String, String> generate() throws Throwable {
 		switch (jvmMode) {
 		case INTERNAL:
-			return PluginMetadataGen.generate(toSearch, toLinkAgainst);
+			return PluginMetadataGen.generate(classesFolder, jarsToLinkAgainst);
 		case EXTERNAL:
-			PluginMetadataGen.External input = new PluginMetadataGen.External(toSearch, toLinkAgainst);
+			PluginMetadataGen.External input = new PluginMetadataGen.External(classesFolder, jarsToLinkAgainst);
 			PluginMetadataGen.External result = JavaExecable.exec(getProject(), input);
 			return result.osgiInf;
 		default:

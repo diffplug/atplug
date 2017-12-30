@@ -17,6 +17,7 @@ package com.diffplug.gradle.autosgi;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -26,8 +27,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -200,9 +203,10 @@ public class PluginMetadataGen {
 			try {
 				// DeclarativeMetadataCreator<Socket>
 				Class<?> creatorClazz = classLoader.loadClass(socketClass.getName() + METADATA_CREATOR);
-				Object instance = creatorClazz.newInstance();
+				Object instance = instantiate(creatorClazz);
 				// String DeclarativeMetadataCreator<Socket>::configFor(Class<? extends Socket> clazz)
 				Method method = creatorClazz.getMethod(METADATA_CREATOR_METHOD, Class.class);
+				method.setAccessible(true);
 				return (Class<?> instanceClass) -> {
 					try {
 						return (String) method.invoke(instance, instanceClass);
@@ -218,6 +222,21 @@ public class PluginMetadataGen {
 			}
 		});
 		return metadataCreator.apply(plugClass);
+	}
+
+	/** Calls the no-arg constructor of the given class, even if it is private. */
+	static <T> T instantiate(Class<? extends T> clazz) throws Exception {
+		Constructor<?> constructor = null;
+		for (Constructor<?> candidate : clazz.getDeclaredConstructors()) {
+			if (candidate.getParameterCount() == 0) {
+				constructor = candidate;
+				break;
+			}
+		}
+		Objects.requireNonNull(constructor, "Class must have a no-arg constructor, but it didn't.  " + clazz + " " + Arrays.asList(clazz.getDeclaredConstructors()));
+		@SuppressWarnings("unchecked")
+		T instance = (T) constructor.newInstance();
+		return instance;
 	}
 
 	/** Provids access to JNI libraries, compliments of http://stackoverflow.com/a/1008631/1153071. */

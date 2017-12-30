@@ -49,16 +49,19 @@ public class PluginMetadataPlugin extends ProjectPlugin {
 			// get the classes we're compiling
 			JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 			SourceSet main = javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-			File classesDir = main.getOutput().getClassesDir();
+			File classesDir = main.getOutput().getClassesDirs().getSingleFile();
 
 			// and the dependencies they need to run
 			ProjectPlugin.getPlugin(project, JavaPlugin.class);
-			Set<File> runtimeConfig = project.getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME).getFiles();
+			Set<File> toLink = project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME).getFiles();
 
 			// create the metadata
 			File osgiInf = project.file(OSGI_INF);
 			PluginMetadataTask pluginMetadataTask = project.getTasks().create(PluginMetadataTask.TASK_NAME, PluginMetadataTask.class);
-			pluginMetadataTask.init(classesDir, runtimeConfig, osgiInf, extension.mode);
+			pluginMetadataTask.classesFolder = classesDir;
+			pluginMetadataTask.jarsToLinkAgainst = toLink;
+			pluginMetadataTask.jvmMode = extension.mode;
+			pluginMetadataTask.osgiInfFolder = osgiInf;
 
 			// compile -> generateOsgiMetadata -> processResources
 			pluginMetadataTask.dependsOn(project.getTasks().getByName(JavaPlugin.COMPILE_JAVA_TASK_NAME));

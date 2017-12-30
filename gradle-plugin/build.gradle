@@ -10,3 +10,12 @@ dependencies {
 	// testing
 	testCompile "junit:junit:${VER_JUNIT}"
 }
+
+gradlePlugin {
+	plugins {
+		pluginMetadata {
+			id = 'com.diffplug.autosgi.gradle'
+			implementationClass = 'com.diffplug.gradle.autosgi.PluginMetadataPlugin'
+		}
+	}
+}

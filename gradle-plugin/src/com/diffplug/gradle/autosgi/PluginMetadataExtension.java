@@ -31,7 +31,4 @@ public class PluginMetadataExtension {
 	void mode(JavaExecable.Mode mode) {
 		this.mode = mode;
 	}
-
-	/** Adds a plugin-type to look for. */
-	void plugin(String plugin) {}
 }
