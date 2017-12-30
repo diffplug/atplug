@@ -1,2 +1,2 @@
-include 'gradle-plugin'
+include 'plugin-gradle'
 include 'lib-runtime'
