@@ -4,11 +4,11 @@ tasks.eclipse.dependsOn(pluginUnderTestMetadata)
 
 dependencies {
 	// javaexec
-	compile "com.diffplug.gradle:goomph:${VER_GOOMPH}"
+	compile 'com.diffplug.gradle:goomph:3.9.0'
 	// asm
-	compile "org.ow2.asm:asm:${VER_ASM}"
+	compile 'org.ow2.asm:asm:6.0'
 	// testing
-	testCompile "junit:junit:${VER_JUNIT}"
+	testCompile 'junit:junit:4.12'
 }
 
 gradlePlugin {

@@ -1,8 +1,8 @@
 dependencies {
 	// osgi
-	compile "org.eclipse:osgi:${VER_OSGI}"
+	compile 'org.eclipse:osgi:3.10.0-v20140606-1445'
 	// immutable data structures
-	compile "com.diffplug.durian:durian-collect:${VER_DURIAN}"
+	compile 'com.diffplug.durian:durian-collect:1.2.0'
 	// testing
-	testCompile "junit:junit:${VER_JUNIT}"
+	testCompile 'junit:junit:4.12'
 }
