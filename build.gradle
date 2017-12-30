@@ -1,20 +1,11 @@
-buildscript {
-	repositories {
-		maven { url "https://plugins.gradle.org/m2/" }
-	}
-	dependencies {
-		// osgi and eclipse projects
-		classpath "com.diffplug.gradle:goomph:${VER_GOOMPH}"
-		// code formatting
-		classpath "com.diffplug.gradle.spotless:spotless:${VER_SPOTLESS}"
-		// markdown in javadoc and syntax highlighting
-		classpath "ch.raffael.pegdown-doclet:pegdown-doclet:${VER_PEGDOWN_DOCLET}"
-		// bintray uploading
-		classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:${VER_BINTRAY}"
-		// github pages javadoc upload
-		classpath "org.ajoberstar:gradle-git:${VER_GRADLE_GIT}"
-	}
+plugins {
+	id 'com.github.ben-manes.versions' version '0.17.0'	// dependencyUpdate
+	id 'com.diffplug.gradle.spotless' version '3.7.0'	// https://github.com/diffplug/spotless/tree/master/plugin-gradle
+	id 'com.jfrog.bintray' version '1.8.0'				// https://github.com/bintray/gradle-bintray-plugin
+	id 'org.jdrupes.mdoclet' version '1.0.3'			// https://plugins.gradle.org/plugin/org.jdrupes.mdoclet
+	id 'com.diffplug.gradle.eclipse.resourcefilters' version '3.9.0' // https://github.com/diffplug/goomph
 }
+
 
 /////////////////
 // CODE FORMAT //
@@ -28,7 +19,7 @@ spotless {
 		}
 		licenseHeaderFile	rootProject.file('gradle/spotless.license.java')		// License header file
 		importOrderFile		rootProject.file('gradle/spotless.importorder')			// An import ordering file, exported from Eclipse
-		eclipseFormatFile	rootProject.file('gradle/spotless.eclipseformat.xml')	// XML file dumped out by the Eclipse formatter
+		eclipse().configFile rootProject.file('gradle/spotless.eclipseformat.xml')	// XML file dumped out by the Eclipse formatter
 	}
 	format 'misc', {
 		target fileTree('.') {
@@ -45,13 +36,13 @@ spotless {
 		target rootProject.fileTree('.') {
 			include '**/*.md'
 		}
+		propertiesFile('gradle.properties')
 	}
 }
 
 //////////////////////////
 // ROOT ECLIPSE PROJECT //
 //////////////////////////
-apply plugin: 'com.diffplug.gradle.eclipse.resourcefilters'
 eclipseResourceFilters {
 	exclude().folders().name('gradle-plugin')
 	exclude().folders().name('lib-runtime')
@@ -65,8 +56,8 @@ subprojects {
 	// JAVA SETUP //
 	////////////////
 	apply plugin: 'java'
-	sourceCompatibility = VER_JAVA
-	targetCompatibility = VER_JAVA
+	sourceCompatibility = '1.8'
+	targetCompatibility = '1.8'
 	sourceSets {
 		main.java.srcDir 'src'
 		test.java.srcDir 'test'
@@ -93,7 +84,7 @@ subprojects {
 	//////////////
 	apply plugin: 'findbugs'
 	findbugs {
-		toolVersion = VER_FINDBUGS
+		toolVersion = '3.0.1'
 		sourceSets = [sourceSets.main]	// don't check the test code
 		ignoreFailures = false 	// bug free or it doesn't ship!
 		reportsDir = file('build/findbugs')
@@ -110,7 +101,7 @@ subprojects {
 	}
 	// we'll want the findbugs annotations (they don't have a 3.0.1 version)
 	dependencies {
-		compileOnly 'com.google.code.findbugs:annotations:3.0.0'
-		compileOnly 'com.google.code.findbugs:jsr305:3.0.0'
+		compileOnly 'com.google.code.findbugs:annotations:3.0.1'
+		compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
 	}
 }

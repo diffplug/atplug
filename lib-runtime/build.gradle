@@ -1,7 +1,3 @@
-apply plugin: 'java'
-sourceCompatibility = VER_JAVA
-targetCompatibility = VER_JAVA
-
 dependencies {
 	// osgi
 	compile "org.eclipse:osgi:${VER_OSGI}"
