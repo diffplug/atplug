@@ -1,107 +1,67 @@
 plugins {
-	id 'com.github.ben-manes.versions' version '0.17.0'	// dependencyUpdate
-	id 'com.diffplug.gradle.spotless' version '3.7.0'	// https://github.com/diffplug/spotless/tree/master/plugin-gradle
-	id 'com.jfrog.bintray' version '1.8.0'				// https://github.com/bintray/gradle-bintray-plugin
-	id 'org.jdrupes.mdoclet' version '1.0.3'			// https://plugins.gradle.org/plugin/org.jdrupes.mdoclet
-	id 'com.diffplug.gradle.eclipse.resourcefilters' version '3.9.0' // https://github.com/diffplug/goomph
+	id 'com.diffplug.blowdryer'
+	id 'com.diffplug.spotless-changelog'
 }
 
+repositories { mavenCentral() }
 
-/////////////////
-// CODE FORMAT //
-/////////////////
-apply plugin: 'com.diffplug.gradle.spotless'
-spotless {
-	java {
-		target fileTree('.') {
-			include '**/*.java'
-			exclude 'gradle/**'
-		}
-		licenseHeaderFile	rootProject.file('gradle/spotless.license.java')		// License header file
-		importOrderFile		rootProject.file('gradle/spotless.importorder')			// An import ordering file, exported from Eclipse
-		eclipse().configFile rootProject.file('gradle/spotless.eclipseformat.xml')	// XML file dumped out by the Eclipse formatter
-	}
-	format 'misc', {
-		target fileTree('.') {
-			include '**/.gitignore'
-			include '**/*.gradle'
-			include '**/*.md'
-			include '**/*.sh'
-		}
-		indentWithTabs()
-		trimTrailingWhitespace()
-		endWithNewline()
-	}
-	freshmark {
-		target rootProject.fileTree('.') {
-			include '**/*.md'
-		}
-		propertiesFile('gradle.properties')
-	}
+group = 干.proj('maven_group', 'the maven group, recommend com.diffplug')
+allprojects {
+	apply from: 干.file('base/changelog.gradle')
 }
+apply from: 干.file('spotless/freshmark.gradle')
+apply from: 干.file('base/sonatype.gradle')
 
-//////////////////////////
-// ROOT ECLIPSE PROJECT //
-//////////////////////////
-eclipseResourceFilters {
-	exclude().folders().name('gradle-plugin')
-	exclude().folders().name('lib-runtime')
-}
-
-/////////////////
-// SUBPROJECTS //
-/////////////////
+String VER_JUNIT_JUPITER = '5.8.2'
 subprojects {
-	////////////////
-	// JAVA SETUP //
-	////////////////
-	apply plugin: 'java'
-	sourceCompatibility = '1.8'
-	targetCompatibility = '1.8'
-	sourceSets {
-		main.java.srcDir 'src'
-		test.java.srcDir 'test'
-	}
-	repositories {
-		mavenCentral()
-	}
+	apply from: 干.file('base/kotlin.gradle')
+	apply from: 干.file('spotless/java.gradle')
+	repositories { mavenCentral() }
 
-	/////////////////////
-	// ECLIPSE PROJECT //
-	/////////////////////
-	apply plugin: 'eclipse'
-	eclipse {
-		classpath {
-			downloadSources true
-			downloadJavadoc true
-		}
-	}
-	// always create fresh projects
-	tasks.eclipse.dependsOn(cleanEclipse)
+	if (it.name == 'plug-runtime') {
+		ext.maven_name='DiffPlug Plugin Runtime'
+		ext.maven_desc='Runtime for the DiffPlug Plugin System'
 
-	//////////////
-	// FINDBUGS //
-	//////////////
-	apply plugin: 'findbugs'
-	findbugs {
-		toolVersion = '3.0.1'
-		sourceSets = [sourceSets.main]	// don't check the test code
-		ignoreFailures = false 	// bug free or it doesn't ship!
-		reportsDir = file('build/findbugs')
-		effort = 'max'			// min|default|max
-		reportLevel = 'high'	// low|medium|high (low = sensitive to even minor mistakes)
-		omitVisitors = []		// bugs that we want to ignore
-	}
-	// HTML instead of XML
-	tasks.withType(FindBugs) {
-		reports {
-			xml.enabled = false
-			html.enabled = true
+		//		apply plugin: 'kotlinx-serialization'
+		dependencies {
+			//implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
+			// osgi
+			implementation 'org.eclipse:osgi:3.10.0-v20140606-1445'
+			// immutable data structures
+			implementation 'com.diffplug.durian:durian-collect:1.2.0'
+			// testing
+			testImplementation 'junit:junit:4.12'
 		}
+
+
+	} else if (it.name == 'plug-test-harness') {
+		ext.maven_name='DiffPlug Plugin Runtime'
+		ext.maven_desc='Runtime for the DiffPlug Plugin System'
+
+		String VER_DURIAN = '1.2.0'
+		dependencies {
+			api "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
+			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
+			implementation "com.diffplug.durian:durian-concurrent:${VER_DURIAN}"
+			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
+		}
+	} else if (it.name == 'plug-plugin-gradle') {
+		ext.maven_name='DiffPlug Plugin Runtime'
+		ext.maven_desc='Runtime for the DiffPlug Plugin System'
+
+		apply from: 干.file('base/gradle-plugin.gradle')
+		dependencies {
+			// javaexec
+			implementation 'com.diffplug.gradle:goomph:3.9.0'
+			// asm
+			implementation 'org.ow2.asm:asm:6.0'
+			// testing
+			testImplementation 'junit:junit:4.12'
+		}
+	} else {
+		throw new IllegalArgumentException("Unexpected project " + it.name)
 	}
-	// we'll want the findbugs annotations (they don't have a 3.0.1 version)
-	dependencies {
-		compileOnly 'com.google.code.findbugs:annotations:3.0.1'
-		compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
-	}
+	// it all needs to get published and formatted
+	apply from: 干.file('base/maven.gradle')
+	apply from: 干.file('base/sonatype.gradle')
 }
