@@ -1,19 +1,27 @@
 /*
- * Copyright (C) 2016-2021 DiffPlug, LLC - All Rights Reserved
- * Unauthorized copying of this file via any medium is strictly prohibited.
- * Proprietary and confidential.
- * Please send any inquiries to Ned Twigg <ned.twigg@diffplug.com>
+ * Copyright (C) 2016-2022 DiffPlug
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.diffplug.autosgi;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
 import com.diffplug.autosgi.parsing.MarkupFormat;
 import com.diffplug.common.base.Converter;
 import com.diffplug.common.base.StringPrinter;
 import com.diffplug.common.collect.ImmutableMap;
-import com.diffplug.testcloset.ConfigTestUtil;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class OsgiComponentTest {
 	@Test
@@ -24,7 +32,7 @@ public class OsgiComponentTest {
 
 	public void testRoundtrip(OsgiComponent osgi) {
 		Converter<OsgiComponent, String> converter = MarkupFormat.xml().asConverter(OsgiComponent.mapping());
-		ConfigTestUtil.roundtrip(converter, osgi);
+		roundtrip(converter, osgi);
 	}
 
 	@Test
@@ -40,5 +48,18 @@ public class OsgiComponentTest {
 				"</component>").trim();
 		Assertions.assertEquals(expected, actual);
 		testRoundtrip(new OsgiComponent("name", "implementation", "provides"));
+	}
+
+	/** Roundtrips the given value. */
+	private static <T> void roundtrip(Converter<T, String> converter, T value) {
+		String serialized = converter.convert(value);
+		T parsed = converter.reverse().convert(serialized);
+		String roundTripped = converter.convert(parsed);
+		Assertions.assertEquals(serialized, roundTripped);
+	}
+
+	private static <T> void roundtrip(Converter<T, String> converter, T value, String expected) {
+		roundtrip(converter, value);
+		Assertions.assertEquals(expected, converter.convert(value));
 	}
 }

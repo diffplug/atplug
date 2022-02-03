@@ -23,12 +23,11 @@ plugins {
 }
 
 blowdryerSetup {
-	//github 'diffplug/blowdryer-diffplug', 'tag', '5.1.3'
-	devLocal '../blowdryer-diffplug'
+	github 'diffplug/blowdryer-diffplug', 'tag', '5.1.3'
+	//devLocal '../blowdryer-diffplug'
 }
 
-include 'plug-plugin-gradle'
-include 'plug-runtime'
-include 'plug-test-harness'
-
+include 'autosgi-runtime'
+include 'autosgi-test-harness'
+include 'autosgi-plugin-gradle'
 rootProject.name = 'autosgi'

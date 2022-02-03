@@ -1,11 +1,24 @@
 /*
- * Copyright (C) 2015-2021 DiffPlug, LLC - All Rights Reserved
- * Unauthorized copying of this file via any medium is strictly prohibited.
- * Proprietary and confidential.
- * Please send any inquiries to Ned Twigg <ned.twigg@diffplug.com>
+ * Copyright (C) 2015-2022 DiffPlug
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.diffplug.autosgi;
 
+
+import com.diffplug.common.base.Box;
+import com.diffplug.common.base.Errors;
+import com.diffplug.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +33,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -28,12 +40,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
-
-import com.diffplug.common.base.Box;
-import com.diffplug.common.base.Errors;
-import com.diffplug.common.base.Preconditions;
-import com.diffplug.common.collect.ImmutableMap;
-import com.diffplug.common.rx.Chit;
 
 /** Describes an OSGi service. */
 public class ServiceDescriptor<T> {
@@ -80,7 +86,7 @@ public class ServiceDescriptor<T> {
 		if (ref instanceof MockReference) {
 			return ((MockReference<T>) ref).open();
 		} else {
-			return ServiceHandle.Companion.open(ref);
+			return ServiceHandle.open(ref);
 		}
 	}
 
@@ -102,14 +108,6 @@ public class ServiceDescriptor<T> {
 			result.set(function.apply(service));
 		});
 		return result.get();
-	}
-
-	/** Opens the service, and automatically disposes when the ear is disposed. */
-	public T openManagedBy(Chit chit) {
-		Preconditions.checkArgument(!chit.isDisposed());
-		ServiceHandle<T> handle = open();
-		chit.runWhenDisposed(handle::close);
-		return handle.get();
 	}
 
 	/** Opens and closes the service safely. */
@@ -209,7 +207,7 @@ public class ServiceDescriptor<T> {
 		}
 
 		public ServiceHandle<T> open() {
-			return ServiceHandle.Companion.mock(value);
+			return ServiceHandle.mock(value);
 		}
 
 		@Override

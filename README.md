@@ -12,7 +12,7 @@ output = [
     link(image('CircleCI', 'https://circleci.com/gh/diffplug/spotless-changelog.svg?style=shield'), 'https://circleci.com/gh/diffplug/spotless-changelog')
     ].join('\n');
 -->
-[![Gradle plugin](https://img.shields.io/badge/plugins.gradle.org-com.diffplug.spotless--changelog-blue.svg)](https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog)
+[![Gradle plugin](https://img.shields.io/badge/plugins.gradle.org-com.diffplug.autosgi-blue.svg)](https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog)
 [![Maven central](https://img.shields.io/badge/mavencentral-available-blue.svg)](https://search.maven.org/search?q=g:com.diffplug.spotless-changelog)
 [![Apache 2.0](https://img.shields.io/badge/license-apache--2.0-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
@@ -168,8 +168,4 @@ Nothing so far...
 
 ## Acknowledgements
 
-* Formatted by [spotless](https://github.com/diffplug/spotless), [as such](https://github.com/diffplug/durian-rx/blob/v1.0/build.gradle?ts=4#L70-L90).
-* Bugs found by [findbugs](http://findbugs.sourceforge.net/), [as such](https://github.com/diffplug/durian-rx/blob/v1.0/build.gradle?ts=4#L92-L116).
-* Built by [gradle](http://gradle.org/).
-* Tested by [junit](http://junit.org/).
 * Maintained by [DiffPlug](http://www.diffplug.com/).
