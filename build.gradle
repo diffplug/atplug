@@ -20,12 +20,14 @@ subprojects {
 
 	String VER_DURIAN = '1.2.0'
 	if (it.name == 'autosgi-runtime') {
+		ext.kotlin_jvmTarget = '1.8'
+		apply from: 干.file('base/kotlin.gradle')
 		apply plugin: 'java-library'
+		apply plugin: 'kotlinx-serialization'
 		ext.maven_name = 'AutOSGi runtime'
 		dependencies {
-			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
-			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
-			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
+			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
+			testImplementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
 			testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
 		}
