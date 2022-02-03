@@ -21,7 +21,7 @@ subprojects {
 	String VER_DURIAN = '1.2.0'
 	if (it.name == 'autosgi-runtime') {
 		apply plugin: 'java-library'
-		ext.maven_name='AutOSGi runtime'
+		ext.maven_name = 'AutOSGi runtime'
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
@@ -41,6 +41,7 @@ subprojects {
 		ext.maven_name='AutOSGi test harness'
 		dependencies {
 			api "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
+			implementation project(':autosgi-runtime')
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-concurrent:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
