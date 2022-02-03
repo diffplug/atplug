@@ -28,6 +28,7 @@ blowdryerSetup {
 }
 
 include 'autosgi-runtime'
+include 'autosgi-osgi'
 include 'autosgi-test-harness'
 include 'autosgi-plugin-gradle'
 rootProject.name = 'autosgi'

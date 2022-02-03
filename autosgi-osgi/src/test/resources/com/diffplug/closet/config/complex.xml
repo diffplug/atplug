@@ -1,0 +1,19 @@
+<post>
+	<author>Ned Twigg</author>
+	<subject>XML seems more complicated than it needs to be...<!--but maybe I'm just ignorant--></subject><!--
+Aside: if I had a dollar for every time I thought
+someone built something wrong, so I built it "right"
+only to find that I couldn't avoid the same problems
+the original author had had, then I would have lots of dollars-->
+	<content>No matter 
+		<i>how</i>
+ long I'm in this business.
+
+No matter 
+		<i>how 
+			<b>long</b>
+		</i>
+ I do this.  I always find
+that it's difficult.
+	</content>
+</post>
