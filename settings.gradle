@@ -27,8 +27,8 @@ blowdryerSetup {
 	devLocal '../blowdryer-diffplug'
 }
 
-include 'autosgi-runtime'
-include 'autosgi-osgi'
-include 'autosgi-test-harness'
-include 'autosgi-plugin-gradle'
-rootProject.name = 'autosgi'
+include 'atplug-runtime'
+include 'atplug-osgi'
+include 'atplug-test-harness'
+include 'atplug-plugin-gradle'
+rootProject.name = 'atplug'

@@ -20,20 +20,20 @@ subprojects {
 
 	ext.kotlin_jvmTarget = '1.8'
 	String VER_DURIAN = '1.2.0'
-	if (it.name == 'autosgi-runtime') {
+	if (it.name == 'atplug-runtime') {
 		apply plugin: 'java-library'
 		apply from: 干.file('base/kotlin.gradle')
 		apply plugin: 'kotlinx-serialization'
-		ext.maven_name = 'AutOSGi runtime'
+		ext.maven_name = 'AtPlug runtime'
 		dependencies {
 			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
 			testImplementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
 			testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
 		}
-	} else if (it.name == 'autosgi-osgi') {
+	} else if (it.name == 'atplug-osgi') {
 		apply plugin: 'java-library'
-		ext.maven_name = 'AutOSGi for OSGi'
+		ext.maven_name = 'AtPlug for OSGi'
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
@@ -48,19 +48,19 @@ subprojects {
 				api 'org.eclipse.osgi'
 			}
 		}
-	} else if (it.name == 'autosgi-test-harness') {
+	} else if (it.name == 'atplug-test-harness') {
 		apply plugin: 'java-library'
 		apply from: 干.file('base/kotlin.gradle')
-		ext.maven_name='AutOSGi test harness'
+		ext.maven_name='AtPlug test harness'
 		dependencies {
 			api "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
-			implementation project(':autosgi-runtime')
+			implementation project(':atplug-runtime')
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-concurrent:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
 		}
-	} else if (it.name == 'autosgi-plugin-gradle') {
-		ext.maven_name='AutOSGi metadata generation Gradle plugin'
+	} else if (it.name == 'atplug-plugin-gradle') {
+		ext.maven_name='AtPlug metadata generation Gradle plugin'
 		apply from: 干.file('base/gradle-plugin.gradle')
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"

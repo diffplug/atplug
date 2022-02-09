@@ -1,8 +1,8 @@
-# <img align="left" src="_images/logo_128.png"> AutOSGi: Sockets and Plugs without boilerplate
+# <img align="left" src="_images/logo_128.png"> AtPlug: Sockets and Plugs without boilerplate
 
 <!---freshmark shields
 output = [
-    link(shield('Gradle plugin', 'plugins.gradle.org', 'com.diffplug.autosgi', 'blue'), 'https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog'),
+    link(shield('Gradle plugin', 'plugins.gradle.org', 'com.diffplug.atplug', 'blue'), 'https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog'),
     link(shield('Maven central', 'mavencentral', 'available', 'blue'), 'https://search.maven.org/search?q=g:com.diffplug.spotless-changelog'),
     link(shield('Apache 2.0', 'license', 'apache-2.0', 'blue'), 'https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)'),
     '',
@@ -12,7 +12,7 @@ output = [
     link(image('CircleCI', 'https://circleci.com/gh/diffplug/spotless-changelog.svg?style=shield'), 'https://circleci.com/gh/diffplug/spotless-changelog')
     ].join('\n');
 -->
-[![Gradle plugin](https://img.shields.io/badge/plugins.gradle.org-com.diffplug.autosgi-blue.svg)](https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog)
+[![Gradle plugin](https://img.shields.io/badge/plugins.gradle.org-com.diffplug.atplug-blue.svg)](https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog)
 [![Maven central](https://img.shields.io/badge/mavencentral-available-blue.svg)](https://search.maven.org/search?q=g:com.diffplug.spotless-changelog)
 [![Apache 2.0](https://img.shields.io/badge/license-apache--2.0-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
@@ -23,7 +23,7 @@ output = [
 <!---freshmark /shields -->
 
 
-## AutOSGi is...
+## AtPlug is...
 
 - a plugin system for the JVM
 - that generates all OSGi metadata for you - write Java code, not error-prone metadata
@@ -31,11 +31,11 @@ output = [
   + No need for OSGi in small systems (e.g. unit tests)
   + Take full advantage of OSGi's power in large systems
 
-AutOSGi has two components:
+AtPlug has two components:
 
 - a small runtime (less than 1000 lines) which allows seamless operation inside and outside of OSGi
 - a buildtime step which generates OSGi declarative service metadata
-  + Gradle plugin: [`com.diffplug.gradle.autosgi`](https://plugins.gradle.org/plugin/com.diffplug.gradle.autosgi)
+  + Gradle plugin: [`com.diffplug.gradle.atplug`](https://plugins.gradle.org/plugin/com.diffplug.gradle.atplug)
   + Contributions welcome for maven, ant, etc.
 
 It is currently in production usage at [DiffPlug](https://www.diffplug.com); extracting it into an opensource project is a WIP.
@@ -53,7 +53,7 @@ public interface FileMenu {
 
 Let's say our system has 100 different `FileMenu` plugins.  Loading all 100 plugins will take a long time, so we'd like to describe which files a given `FileMenu` applies to without having to actually load it.  One way would be if each `FileMenu` declared which file extensions it is applicable to.
 
-We can accomplish this in AutOSGi by adding a method to the socket interface marked with `@Metadata`.  The annotation is a documentation hint that this method should return a constant value which will be used to generate static metadata about the plugin.
+We can accomplish this in AtPlug by adding a method to the socket interface marked with `@Metadata`.  The annotation is a documentation hint that this method should return a constant value which will be used to generate static metadata about the plugin.
 
 ```java
 public interface FileMenu {
@@ -67,7 +67,7 @@ public interface FileMenu {
 }
 ```
 
-The OSGi runtime (and AutOSGi's non-OSGi compatibility layer) can store metadata about a plugin in a `Map<String, String>` which gets saved into a metadata file.  This is the mechanism which allows us to inspect all the `FileMenu` plugins in the system without loading their classes.
+The OSGi runtime (and AtPlug's non-OSGi compatibility layer) can store metadata about a plugin in a `Map<String, String>` which gets saved into a metadata file.  This is the mechanism which allows us to inspect all the `FileMenu` plugins in the system without loading their classes.
 
 To take advantage of this, we need to declare a class `FileMenu.MetadataCreator extends `[`DeclarativeMetadataCreator<FileMenu>`](TODO-javadoc), which will take a `FileMenu` instance and return a `Map<String, String>` (a.k.a. `Function<FileMenu, Map<String, String>>`).  This will be used during the build step to generate OSGi metadata files.
 
@@ -132,7 +132,7 @@ public class DocxFileMenu implements FileMenu {
 }
 ```
 
-When we run `gradlew generateOsgiMetadata` (which will run automatically whenever it is needed), AutOSGi's build step will generate these files for us:
+When we run `gradlew generateOsgiMetadata` (which will run automatically whenever it is needed), AtPlug's build step will generate these files for us:
 
 ```
 --- OSGI-INF/com.diffplug.talks.socketsandplugs.DocxFileMenu.xml ---
@@ -148,7 +148,7 @@ When we run `gradlew generateOsgiMetadata` (which will run automatically wheneve
 Service-Component: OSGI-INF/com.diffplug.talks.socketsandplugs.DocxFileMenu.xml
 ```
 
-AutOSGi ensures that you'll never have to edit these files by hand, but there's no magic.  You write the function that generates the metadata (MetadataCreator) and you write the function that parses the metadata (Descriptor).  AutOSGi just does all the plumbing and grunt work for you.
+AtPlug ensures that you'll never have to edit these files by hand, but there's no magic.  You write the function that generates the metadata (MetadataCreator) and you write the function that parses the metadata (Descriptor).  AtPlug just does all the plumbing and grunt work for you.
 
 To use the plugin system, all you have to do is:
 
