@@ -44,7 +44,6 @@ public class PlugPlugin implements Plugin<Project> {
 
 	@Override
 	public void apply(Project project) {
-		PlugExtension extension = project.getExtensions().create(PlugExtension.NAME, PlugExtension.class);
 		// get the classes we're compiling
 		project.getPlugins().apply(JavaPlugin.class);
 		JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
