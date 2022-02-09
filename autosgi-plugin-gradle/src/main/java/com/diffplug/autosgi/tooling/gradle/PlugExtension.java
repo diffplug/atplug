@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.diffplug.plug.generate.gradle;
+package com.diffplug.autosgi.tooling.gradle;
 
 /** Gradle extension which specifies which plugin classes to look for. */
 public class PlugExtension {

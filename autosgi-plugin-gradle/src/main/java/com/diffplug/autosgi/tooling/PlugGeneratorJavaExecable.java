@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.diffplug.plug.generate;
+package com.diffplug.autosgi.tooling;
 
 
-import com.diffplug.plug.generate.gradle.JavaExecable;
+import com.diffplug.autosgi.tooling.gradle.JavaExecable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

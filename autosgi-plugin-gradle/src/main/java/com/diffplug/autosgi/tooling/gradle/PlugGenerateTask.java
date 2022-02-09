@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.diffplug.plug.generate.gradle;
+package com.diffplug.autosgi.tooling.gradle;
 
 
+import com.diffplug.autosgi.tooling.PlugGeneratorJavaExecable;
 import com.diffplug.common.base.Errors;
 import com.diffplug.common.base.Joiner;
 import com.diffplug.common.io.Files;
 import com.diffplug.gradle.FileMisc;
 import com.diffplug.gradle.JRE;
-import com.diffplug.plug.generate.PlugGeneratorJavaExecable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
