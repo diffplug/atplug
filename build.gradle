@@ -18,11 +18,11 @@ subprojects {
 	apply from: 干.file('spotless/java.gradle')
 	repositories { mavenCentral() }
 
+	ext.kotlin_jvmTarget = '1.8'
 	String VER_DURIAN = '1.2.0'
 	if (it.name == 'autosgi-runtime') {
-		ext.kotlin_jvmTarget = '1.8'
-		apply from: 干.file('base/kotlin.gradle')
 		apply plugin: 'java-library'
+		apply from: 干.file('base/kotlin.gradle')
 		apply plugin: 'kotlinx-serialization'
 		ext.maven_name = 'AutOSGi runtime'
 		dependencies {
@@ -50,6 +50,7 @@ subprojects {
 		}
 	} else if (it.name == 'autosgi-test-harness') {
 		apply plugin: 'java-library'
+		apply from: 干.file('base/kotlin.gradle')
 		ext.maven_name='AutOSGi test harness'
 		dependencies {
 			api "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
