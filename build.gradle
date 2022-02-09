@@ -31,13 +31,6 @@ subprojects {
 			testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
 			testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
 		}
-		apply plugin: 'com.diffplug.eclipse.mavencentral'
-		eclipseMavenCentral {
-			release '4.22.0', {
-				constrainTransitivesToThisRelease()
-				api 'org.eclipse.osgi'
-			}
-		}
 	} else if (it.name == 'autosgi-osgi') {
 		apply plugin: 'java-library'
 		ext.maven_name = 'AutOSGi for OSGi'

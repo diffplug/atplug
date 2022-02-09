@@ -12,8 +12,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
-class OsgiComponent(
-		val name: String,
+data class PlugDescriptor(
 		val implementation: String,
 		val provides: String,
 		val properties: Map<String, String> = mapOf()
@@ -25,6 +24,6 @@ class OsgiComponent(
 	fun toJson() = Json { prettyPrint = true }.encodeToString(this)
 
 	companion object {
-		fun fromJson(string: String) = Json.decodeFromString<OsgiComponent>(string)
+		fun fromJson(string: String) = Json.decodeFromString<PlugDescriptor>(string)
 	}
 }

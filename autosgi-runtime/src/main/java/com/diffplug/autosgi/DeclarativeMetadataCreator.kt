@@ -23,7 +23,7 @@ open class DeclarativeMetadataCreator<T>(
 	fun configFor(clazz: Class<out T>): String {
 		val instance = instantiate(clazz)
 		val metadata = metadataGenerator.apply(instance)
-		val component = OsgiComponent(clazz.name, clazz.name, socket.name, metadata)
+		val component = PlugDescriptor(clazz.name, socket.name, metadata)
 		return component.toJson()
 	}
 
