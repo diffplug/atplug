@@ -1,10 +1,5 @@
 package com.diffplug.atplug
 
-import com.diffplug.atplug.DeclarativeMetadataCreator
-import com.diffplug.atplug.Metadata
-import com.diffplug.atplug.Plug
-import com.diffplug.atplug.SocketOwner
-
 interface Fruit {
     @Metadata fun name(): String
 

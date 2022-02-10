@@ -8,7 +8,6 @@ class PlugPluginTest : GradleIntegrationHarness() {
     @Test
     fun test() {
         val runtimeJar = File("../atplug-runtime/build/libs/atplug-runtime-0.1.0.jar").canonicalPath
-        val fruitExample = File("../atplug-runtime/src/test/java/com/diffplug/atplug/Fruit.kt")
         setFile("build.gradle").toContent("""
             plugins {
               id 'org.jetbrains.kotlin.jvm' version '1.6.10'
@@ -22,7 +21,16 @@ class PlugPluginTest : GradleIntegrationHarness() {
               implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
             }
         """.trimIndent())
+
+        val copy = { str: String ->
+            val src = File("../atplug-runtime/src/test/java/com/diffplug/atplug/$str")
+            setFile("src/main/java/com/diffplug/atplug/$str").toContent(Files.readString(src.toPath()))
+        }
+        copy("Fruit.kt")
+        copy("Shape.java")
+        val fruitExample = File("../atplug-runtime/src/test/java/com/diffplug/atplug/Fruit.kt")
         setFile("src/main/java/com/diffplug/atplug/Fruit.kt").toContent(Files.readString(fruitExample.toPath()))
+
         gradleRunner().withArguments("jar").build()
 
         assertFile("src/main/resources/OSGI-INF/com.diffplug.atplug.Apple.xml").hasContent("""
@@ -46,6 +54,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
         assertFile("src/main/resources/META-INF/MANIFEST.MF").hasContent("""
               Manifest-Version: 1.0
               Service-Component: OSGI-INF/com.diffplug.atplug.Apple.xml,OSGI-INF/com.d
-               iffplug.atplug.Orange.xml""".trimIndent())
+               iffplug.atplug.Orange.xml,OSGI-INF/com.diffplug.atplug.Shape${"$"}Circle.xml
+               ,OSGI-INF/com.diffplug.atplug.Shape${"$"}Square.xml""".trimIndent())
     }
 }
