@@ -39,7 +39,6 @@ class PlugGeneratorTest : ResourceHarness() {
 
   @Test
   fun generateMetadata() {
-    println((PlugGeneratorTest::class.java.classLoader).parent.parent)
     val maps =
         PlugGenerator.generate(
             listOf("java", "kotlin").map { File("../atplug-runtime/build/classes/$it/test") },

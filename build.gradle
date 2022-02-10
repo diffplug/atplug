@@ -73,7 +73,7 @@ subprojects {
 			testImplementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
 		}
 		tasks.named('test') {
-			dependsOn ':atplug-runtime:jar'
+			dependsOn ':atplug-runtime:jar', ':atplug-runtime:testClasses'
 		}
 	} else {
 		throw new IllegalArgumentException("Unexpected project " + it.name)
