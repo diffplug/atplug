@@ -9,7 +9,6 @@ class PlugPluginTest : GradleIntegrationHarness() {
     fun test() {
         val runtimeJar = File("../atplug-runtime/build/libs/atplug-runtime-0.1.0.jar").canonicalPath
         val fruitExample = File("../atplug-runtime/src/test/java/com/diffplug/atplug/Fruit.kt")
-        println(Files.readString(fruitExample.toPath()))
         setFile("build.gradle").toContent("""
             plugins {
               id 'org.jetbrains.kotlin.jvm' version '1.6.10'
@@ -44,5 +43,9 @@ class PlugPluginTest : GradleIntegrationHarness() {
                 }
             }
         """.trimIndent())
+        assertFile("src/main/resources/META-INF/MANIFEST.MF").hasContent("""
+              Manifest-Version: 1.0
+              Service-Component: OSGI-INF/com.diffplug.atplug.Apple.xml,OSGI-INF/com.d
+               iffplug.atplug.Orange.xml""".trimIndent())
     }
 }

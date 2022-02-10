@@ -15,7 +15,6 @@
  */
 package com.diffplug.atplug.tooling.gradle;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.diffplug.common.base.Errors;
 import com.diffplug.common.io.Resources;
@@ -29,9 +28,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
-import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 
 public class ResourceHarness {
@@ -126,31 +124,14 @@ public class ResourceHarness {
 	}
 
 	public static class ReadAsserter {
-		private final File file;
+		private final String content;
 
-		private ReadAsserter(File file) {
-			this.file = file;
+		private ReadAsserter(File file) throws IOException {
+			this.content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).trim().replace("\r\n", "\n");
 		}
 
 		public void hasContent(String expected) {
-			hasContent(expected, StandardCharsets.UTF_8);
-		}
-
-		public void hasContent(String expected, Charset charset) {
-			assertThat(file).usingCharset(charset).hasContent(expected);
-		}
-
-		public void hasLines(String... lines) {
-			hasContent(String.join("\n", Arrays.asList(lines)));
-		}
-
-		public void sameAsResource(String resource) throws IOException {
-			hasContent(getTestResource(resource));
-		}
-
-		public void matches(Consumer<AbstractCharSequenceAssert<?, String>> conditions) throws IOException {
-			String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-			conditions.accept(assertThat(content));
+			Assertions.assertEquals(expected, content);
 		}
 	}
 
