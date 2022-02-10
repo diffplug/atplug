@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import javax.inject.Inject;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
@@ -59,7 +60,7 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
-public abstract class PlugGenerateTask extends PlugAbstractTask {
+public abstract class PlugGenerateTask extends DefaultTask {
 	public PlugGenerateTask() {
 		this.getOutputs().upToDateWhen(unused -> {
 			Manifest manifest = Errors.rethrow().get(this::loadManifest);
@@ -97,6 +98,23 @@ public abstract class PlugGenerateTask extends PlugAbstractTask {
 	@OutputDirectory
 	public File getOsgiInfFolder() {
 		return new File(resourcesFolder, PlugPlugin.OSGI_INF);
+	}
+
+	@InputFiles
+	FileCollection classesFolders;
+
+	public FileCollection getClassesFolders() {
+		return classesFolders;
+	}
+
+	void setClassesFolders(Iterable<File> files) {
+		// if we don't copy, Gradle finds an implicit dependency which
+		// forces us to depend on `classes` even though we don't
+		List<File> copy = new ArrayList<>();
+		for (File file : files) {
+			copy.add(file);
+		}
+		classesFolders = getProject().files(copy);
 	}
 
 	@TaskAction
@@ -155,7 +173,7 @@ public abstract class PlugGenerateTask extends PlugAbstractTask {
 	}
 
 	private SortedMap<String, String> generate() throws Throwable {
-		PlugGeneratorJavaExecable input = new PlugGeneratorJavaExecable(getClassesFolders(), getJarsToLinkAgainst().getFiles());
+		PlugGeneratorJavaExecable input = new PlugGeneratorJavaExecable(new ArrayList<>(getClassesFolders().getFiles()), getJarsToLinkAgainst().getFiles());
 		if (getLauncher().isPresent()) {
 			WorkQueue workQueue = getWorkerExecutor().processIsolation(workerSpec -> {
 				workerSpec.getClasspath().from(fromLocalClassloader());

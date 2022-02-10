@@ -86,15 +86,17 @@ public class PlugGenerator {
 			PlugParser parser = new PlugParser();
 			// walk toSearch, passing each classfile to load()
 			for (File toSearch : toSearches) {
-				Files.walkFileTree(toSearch.toPath(), new SimpleFileVisitor<Path>() {
-					@Override
-					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-						if (file.toString().endsWith(EXT_CLASS)) {
-							Errors.rethrow().run(() -> maybeGeneratePlugin(parser, file));
+				if (toSearch.isDirectory()) {
+					Files.walkFileTree(toSearch.toPath(), new SimpleFileVisitor<Path>() {
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+							if (file.toString().endsWith(EXT_CLASS)) {
+								Errors.rethrow().run(() -> maybeGeneratePlugin(parser, file));
+							}
+							return FileVisitResult.CONTINUE;
 						}
-						return FileVisitResult.CONTINUE;
-					}
-				});
+					});
+				}
 			}
 		} finally {
 			classLoader.close();

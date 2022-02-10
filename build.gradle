@@ -18,6 +18,11 @@ subprojects {
 	apply from: 干.file('spotless/java.gradle')
 	repositories { mavenCentral() }
 
+	dependencies {
+		testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
+		testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
+	}
+
 	ext.kotlin_jvmTarget = '1.8'
 	String VER_DURIAN = '1.2.0'
 	if (it.name == 'atplug-runtime') {
@@ -28,8 +33,6 @@ subprojects {
 		dependencies {
 			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
 			testImplementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
-			testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
-			testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
 		}
 	} else if (it.name == 'atplug-osgi') {
 		apply plugin: 'java-library'
@@ -38,8 +41,6 @@ subprojects {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
-			testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
-			testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
 		}
 		apply plugin: 'com.diffplug.eclipse.mavencentral'
 		eclipseMavenCentral {
@@ -62,13 +63,17 @@ subprojects {
 	} else if (it.name == 'atplug-plugin-gradle') {
 		ext.maven_name='AtPlug metadata generation Gradle plugin'
 		apply from: 干.file('base/gradle-plugin.gradle')
+		apply from: 干.file('base/kotlin.gradle')
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
 			implementation 'com.diffplug.gradle:goomph:3.35.0'
 			implementation "org.ow2.asm:asm:9.2"
-			testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
-			testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
+			testImplementation 'org.assertj:assertj-core:3.22.0'
+			testImplementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
+		}
+		tasks.named('test') {
+			dependsOn ':atplug-runtime:jar'
 		}
 	} else {
 		throw new IllegalArgumentException("Unexpected project " + it.name)
