@@ -33,7 +33,14 @@ public interface Shape {
 		}
 	}
 
-	SocketOwner.Id<Shape> socket = new SocketOwner.Id<>(Shape.class);
+	SocketOwner.Id<Shape> socket = new SocketOwner.Id<Shape>(Shape.class) {
+		@Override
+		public Map<String, String> metadata(Shape plug) {
+			Map<String, String> map = new HashMap<>();
+			map.put(KEY_ID, plug.name());
+			return map;
+		}
+	};
 
 	@Plug(Shape.class)
 	class Circle implements Shape {

@@ -7,7 +7,9 @@ interface Fruit {
 			DeclarativeMetadataCreator<Fruit>(
 					Fruit::class.java, { mapOf(Pair(SocketOwner.Id.KEY_ID, it.name())) })
 
-	object Socket : SocketOwner.Id<Fruit>(Fruit::class.java)
+	object Socket : SocketOwner.Id<Fruit>(Fruit::class.java) {
+		override fun metadata(plug: Fruit) = mapOf(Pair(KEY_ID, plug.name()))
+	}
 }
 
 @Plug(Fruit::class)

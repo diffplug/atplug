@@ -10,6 +10,8 @@ import java.util.*
 import java.util.function.Predicate
 
 abstract class SocketOwner<T>() {
+	abstract fun metadata(plug: T): Map<String, String>
+
 	/**
 	 * Instantiates the given plug. Already implemented by the default implementations [Id] and
 	 * [Complex]. If you implement this yourself, make sure that you call [PlugRegistry.register] in
@@ -88,7 +90,7 @@ abstract class SocketOwner<T>() {
 		open fun removeHook(plugDescriptor: PlugDescriptor) {}
 	}
 
-	open class Id<T>(private val socketClass: Class<T>) : SocketOwner<T>() {
+	abstract open class Id<T>(private val socketClass: Class<T>) : SocketOwner<T>() {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
 		private val instanceById = mutableMapOf<String, T>()
 		init {
