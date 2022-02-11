@@ -15,7 +15,10 @@ apply from: 干.file('base/sonatype.gradle')
 String VER_JUNIT_JUPITER = '5.8.2'
 subprojects {
 	apply from: 干.file('base/java8.gradle')
+	apply from: 干.file('base/kotlin.gradle')
 	apply from: 干.file('spotless/java.gradle')
+	apply plugin: 'java-library'
+
 	repositories { mavenCentral() }
 
 	dependencies {
@@ -26,8 +29,6 @@ subprojects {
 	ext.kotlin_jvmTarget = '1.8'
 	String VER_DURIAN = '1.2.0'
 	if (it.name == 'atplug-runtime') {
-		apply plugin: 'java-library'
-		apply from: 干.file('base/kotlin.gradle')
 		apply plugin: 'kotlinx-serialization'
 		ext.maven_name = 'AtPlug runtime'
 		dependencies {
@@ -35,7 +36,6 @@ subprojects {
 			testImplementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 		}
 	} else if (it.name == 'atplug-osgi') {
-		apply plugin: 'java-library'
 		ext.maven_name = 'AtPlug for OSGi'
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
@@ -50,8 +50,6 @@ subprojects {
 			}
 		}
 	} else if (it.name == 'atplug-test-harness') {
-		apply plugin: 'java-library'
-		apply from: 干.file('base/kotlin.gradle')
 		ext.maven_name='AtPlug test harness'
 		dependencies {
 			api "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
@@ -63,7 +61,6 @@ subprojects {
 	} else if (it.name == 'atplug-plugin-gradle') {
 		ext.maven_name='AtPlug metadata generation Gradle plugin'
 		apply from: 干.file('base/gradle-plugin.gradle')
-		apply from: 干.file('base/kotlin.gradle')
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
