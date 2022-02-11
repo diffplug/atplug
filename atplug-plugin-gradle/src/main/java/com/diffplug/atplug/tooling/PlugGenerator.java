@@ -70,6 +70,7 @@ public class PlugGenerator {
 	}
 
 	private final URLClassLoader classLoader;
+	private final Class<?> socketClass;
 	final SortedMap<String, String> osgiInf = new TreeMap<>();
 
 	public static final String EXT_CLASS = ".class";
@@ -83,6 +84,7 @@ public class PlugGenerator {
 
 		ClassLoader parent = null; // explicitly set parent to null so that the classloader is completely isolated
 		classLoader = new URLClassLoader(urls, parent);
+		socketClass = classLoader.loadClass("com.diffplug.atplug.SocketOwner");
 		try {
 			PlugParser parser = new PlugParser();
 			// walk toSearch, passing each classfile to load()
@@ -125,7 +127,7 @@ public class PlugGenerator {
 	private Map<Class<?>, Function<Class<?>, String>> metadataCreatorCache = new HashMap<>();
 
 	@SuppressWarnings("unchecked")
-	private <SocketT, PlugT extends SocketT> String generatePlugin(Class<?> plugClass, Class<?> socketClass) throws IllegalArgumentException, IllegalAccessException {
+	private <SocketT, PlugT extends SocketT> String generatePlugin(Class<?> plugClass, Class<?> socketClass) throws IllegalArgumentException {
 		Preconditions.checkArgument(socketClass.isAssignableFrom(plugClass), "Socket " + socketClass + " is not a supertype of @Plug " + plugClass);
 		return generatePluginTyped((Class<PlugT>) plugClass, (Class<SocketT>) socketClass);
 	}
@@ -137,34 +139,48 @@ public class PlugGenerator {
 	 */
 	private <SocketT, PlugT extends SocketT> String generatePluginTyped(Class<PlugT> plugClass, Class<SocketT> socketClass) {
 		Function<Class<?>, String> metadataCreator = metadataCreatorCache.computeIfAbsent(socketClass, interfase -> {
+			Throwable firstAttempt = null;
 			try {
-				// DeclarativeMetadataCreator<Socket>
+				Class<?> socketOwnerClass = classLoader.loadClass(interfase.getName() + "$Socket");
+				Constructor<?> constructor = socketOwnerClass.getDeclaredConstructor();
+				constructor.setAccessible(true);
+				return generatorForSocket(constructor.newInstance());
+			} catch (Throwable e) {
+				firstAttempt = e;
+			}
+
+			try {
 				Class<?> socketClazz = classLoader.loadClass(interfase.getName());
 				Field socketField = socketClazz.getDeclaredField("socket");
 				Object socket = socketField.get(null);
-				Class<?> socketOwnerClazz = socket.getClass();
-				Method metadata = socketOwnerClazz.getMethod("asDescriptor", Object.class);
-				metadata.setAccessible(true);
-				return (Class<?> instanceClass) -> {
-					try {
-						return (String) metadata.invoke(socket, instantiate(instanceClass));
-					} catch (Exception e) {
-						Throwable rootCause = Throwables.getRootCause(e);
-						if (rootCause instanceof java.lang.ClassNotFoundException) {
-							throw new RuntimeException("Unable to generate metadata for " + instanceClass +
-									", missing transitive dependency " + rootCause.getMessage(), e);
-						} else {
-							throw new RuntimeException("Unable to generate metadata for " + instanceClass +
-									", make sure that its metadata methods return simple constants: " + e.getMessage(), e);
-						}
-					}
-				};
-			} catch (Exception e) {
-				throw new RuntimeException("To create plugin metadata around " + plugClass + " for socket " + socketClass +
-						", we look for a static final field of SocketOwner which must be named `socket`.", e);
+				return generatorForSocket(socket);
+			} catch (Throwable secondAttempt) {
+				IllegalArgumentException e = new IllegalArgumentException("To create metadata for `" + plugClass + "` we need either a field `socket` in `" + interfase + "` or a kotlin `object Socket`.", firstAttempt);
+				e.addSuppressed(secondAttempt);
+				throw e;
 			}
 		});
 		return metadataCreator.apply(plugClass);
+	}
+
+	private Function<Class<?>, String> generatorForSocket(Object socket) throws NoSuchMethodException {
+		Class<?> socketOwnerClazz = socket.getClass();
+		Method metadata = socketOwnerClazz.getMethod("asDescriptor", Object.class);
+		metadata.setAccessible(true);
+		return (Class<?> instanceClass) -> {
+			try {
+				return (String) metadata.invoke(socket, instantiate(instanceClass));
+			} catch (Exception e) {
+				Throwable rootCause = Throwables.getRootCause(e);
+				if (rootCause instanceof java.lang.ClassNotFoundException) {
+					throw new RuntimeException("Unable to generate metadata for " + instanceClass +
+							", missing transitive dependency " + rootCause.getMessage(), e);
+				} else {
+					throw new RuntimeException("Unable to generate metadata for " + instanceClass +
+							", make sure that its metadata methods return simple constants: " + e.getMessage(), e);
+				}
+			}
+		};
 	}
 
 	/** Calls the no-arg constructor of the given class, even if it is private. */
