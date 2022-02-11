@@ -9,8 +9,14 @@ package com.diffplug.atplug
 import java.util.*
 import java.util.function.Predicate
 
-abstract class SocketOwner<T>() {
+abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	abstract fun metadata(plug: T): Map<String, String>
+
+	fun asDescriptor(plug: T): String {
+		val data = metadata(plug)
+		val descriptor = PlugDescriptor(plug!!::class.java.name, socketClass.name, data)
+		return descriptor.toJson()
+	}
 
 	/**
 	 * Instantiates the given plug. Already implemented by the default implementations [Id] and
@@ -31,8 +37,7 @@ abstract class SocketOwner<T>() {
 
 	protected abstract fun remove(plugDescriptor: PlugDescriptor)
 
-	abstract class Complex<T, ParsedDescriptor>(private val socketClass: Class<T>) :
-			SocketOwner<T>() {
+	abstract class Complex<T, ParsedDescriptor>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
 		private val descriptors = mutableMapOf<ParsedDescriptor, PlugDescriptor>()
 		init {
 			PlugRegistry.register(socketClass, this)
@@ -90,7 +95,7 @@ abstract class SocketOwner<T>() {
 		open fun removeHook(plugDescriptor: PlugDescriptor) {}
 	}
 
-	abstract open class Id<T>(private val socketClass: Class<T>) : SocketOwner<T>() {
+	abstract open class Id<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
 		private val instanceById = mutableMapOf<String, T>()
 		init {

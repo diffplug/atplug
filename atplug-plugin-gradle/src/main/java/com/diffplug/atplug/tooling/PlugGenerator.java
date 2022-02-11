@@ -22,6 +22,7 @@ import com.diffplug.common.base.Throwables;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -122,9 +123,6 @@ public class PlugGenerator {
 
 	/** A cache from a plugin interface to a function that converts a class into its metadata. */
 	private Map<Class<?>, Function<Class<?>, String>> metadataCreatorCache = new HashMap<>();
-	/** If a plugin class is named com.package.Socket, then it must have a DeclarativeMatadataCreator<Socket> at com.package.Socket$MetadataCreator. */
-	private static final String METADATA_CREATOR = "$MetadataCreator";
-	private static final String METADATA_CREATOR_METHOD = "configFor";
 
 	@SuppressWarnings("unchecked")
 	private <SocketT, PlugT extends SocketT> String generatePlugin(Class<?> plugClass, Class<?> socketClass) throws IllegalArgumentException, IllegalAccessException {
@@ -141,14 +139,15 @@ public class PlugGenerator {
 		Function<Class<?>, String> metadataCreator = metadataCreatorCache.computeIfAbsent(socketClass, interfase -> {
 			try {
 				// DeclarativeMetadataCreator<Socket>
-				Class<?> creatorClazz = classLoader.loadClass(socketClass.getName() + METADATA_CREATOR);
-				Object instance = instantiate(creatorClazz);
-				// String DeclarativeMetadataCreator<Socket>::configFor(Class<? extends Socket> clazz)
-				Method method = creatorClazz.getMethod(METADATA_CREATOR_METHOD, Class.class);
-				method.setAccessible(true);
+				Class<?> socketClazz = classLoader.loadClass(interfase.getName());
+				Field socketField = socketClazz.getDeclaredField("socket");
+				Object socket = socketField.get(null);
+				Class<?> socketOwnerClazz = socket.getClass();
+				Method metadata = socketOwnerClazz.getMethod("asDescriptor", Object.class);
+				metadata.setAccessible(true);
 				return (Class<?> instanceClass) -> {
 					try {
-						return (String) method.invoke(instance, instanceClass);
+						return (String) metadata.invoke(socket, instantiate(instanceClass));
 					} catch (Exception e) {
 						Throwable rootCause = Throwables.getRootCause(e);
 						if (rootCause instanceof java.lang.ClassNotFoundException) {
@@ -162,8 +161,7 @@ public class PlugGenerator {
 				};
 			} catch (Exception e) {
 				throw new RuntimeException("To create plugin metadata around " + plugClass + " for socket " + socketClass +
-						", we look for an instance of DeclarativeMetadataCreator<" + socketClass + "> which must be named " +
-						socketClass + METADATA_CREATOR, e);
+						", we look for a static final field of SocketOwner which must be named `socket`.", e);
 			}
 		});
 		return metadataCreator.apply(plugClass);

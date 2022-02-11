@@ -23,16 +23,6 @@ public interface Shape {
 	@Metadata
 	String name();
 
-	class MetadataCreator extends DeclarativeMetadataCreator<Shape> {
-		public MetadataCreator() {
-			super(Shape.class, instance -> {
-				Map<String, String> map = new HashMap<>();
-				map.put(SocketOwner.Id.KEY_ID, instance.name());
-				return map;
-			});
-		}
-	}
-
 	SocketOwner.Id<Shape> socket = new SocketOwner.Id<Shape>(Shape.class) {
 		@Override
 		public Map<String, String> metadata(Shape plug) {
