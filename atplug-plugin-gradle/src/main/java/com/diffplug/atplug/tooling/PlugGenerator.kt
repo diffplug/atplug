@@ -112,13 +112,9 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 				metadataCreatorCache.computeIfAbsent(socketClass) { interfase: Class<*> ->
 					var firstAttempt: Throwable? = null
 					try {
-						for (nested in interfase.kotlin.nestedClasses) {
-							println("GENERATE NESTED $nested")
-						}
-						val socketOwnerClass = classLoader.loadClass(interfase.name + "\$Socket")
-						val constructor = socketOwnerClass.getDeclaredConstructor()
-						constructor.isAccessible = true
-						return@computeIfAbsent generatorForSocket(constructor.newInstance())
+						val socketOwnerClass = classLoader.loadClass(interfase.name + "\$Socket").kotlin
+						val socket = socketOwnerClass.objectInstance!!
+						return@computeIfAbsent generatorForSocket(socket)
 					} catch (e: Throwable) {
 						firstAttempt = e
 					}
