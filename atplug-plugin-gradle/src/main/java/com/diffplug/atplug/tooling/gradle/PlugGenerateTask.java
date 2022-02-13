@@ -17,17 +17,19 @@ package com.diffplug.atplug.tooling.gradle;
 
 
 import com.diffplug.atplug.tooling.PlugGeneratorJavaExecable;
-import com.diffplug.common.base.Errors;
-import com.diffplug.common.base.Joiner;
-import com.diffplug.common.io.Files;
 import com.diffplug.gradle.FileMisc;
 import com.diffplug.gradle.JRE;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -39,6 +41,7 @@ import java.util.SortedMap;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -63,7 +66,7 @@ import org.gradle.workers.WorkerExecutor;
 public abstract class PlugGenerateTask extends DefaultTask {
 	public PlugGenerateTask() {
 		this.getOutputs().upToDateWhen(unused -> {
-			Manifest manifest = Errors.rethrow().get(this::loadManifest);
+			Manifest manifest = loadManifest();
 			String componentsCmd = serviceComponents();
 			String componentsActual = manifest.getMainAttributes().getValue(PlugPlugin.SERVICE_COMPONENT);
 			return Objects.equals(componentsActual, componentsCmd);
@@ -126,7 +129,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		FileMisc.cleanDir(getOsgiInfFolder());
 		for (Map.Entry<String, String> entry : result.entrySet()) {
 			File serviceFile = new File(getOsgiInfFolder(), entry.getKey() + PlugPlugin.DOT_XML);
-			Files.asCharSink(serviceFile, StandardCharsets.UTF_8).write(entry.getValue());
+			Files.write(serviceFile.toPath(), entry.getValue().getBytes(StandardCharsets.UTF_8));
 		}
 
 		// the resources directory *needs* the Service-Component entry of the manifest to exist in order for tests to work
@@ -155,11 +158,14 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		return new File(resourcesFolder, "META-INF/MANIFEST.MF");
 	}
 
-	private Manifest loadManifest() throws IOException {
+	private Manifest loadManifest() {
 		Manifest manifest = new Manifest();
 		if (manifestFile().isFile()) {
-			try (InputStream input = Files.asByteSource(manifestFile()).openBufferedStream()) {
+			try (InputStream raw = new FileInputStream(manifestFile());
+					InputStream input = new BufferedInputStream(raw)) {
 				manifest.read(input);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		}
 		return manifest;
@@ -167,8 +173,11 @@ public abstract class PlugGenerateTask extends DefaultTask {
 
 	private void saveManifest(Manifest manifest) throws IOException {
 		FileMisc.mkdirs(manifestFile().getParentFile());
-		try (OutputStream output = Files.asByteSink(manifestFile()).openBufferedStream()) {
+		try (OutputStream raw = new FileOutputStream(manifestFile());
+				OutputStream output = new BufferedOutputStream(raw)) {
 			manifest.write(output);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -203,7 +212,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 				}
 			}
 			Collections.sort(serviceComponents);
-			return Joiner.on(',').join(serviceComponents);
+			return serviceComponents.stream().collect(Collectors.joining(","));
 		}
 	}
 
@@ -218,7 +227,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 					}
 				}
 			} catch (Exception e) {
-				throw Errors.asRuntime(e);
+				throw new RuntimeException(e);
 			}
 		};
 		// add the classes that we need
