@@ -98,7 +98,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		osgiInf[plugClass.name] = osgiInfContent
 	}
 
-	private fun <SocketT, PlugT : SocketT?> generatePlugin(
+	private fun <SocketT, PlugT : SocketT> generatePlugin(
 			plugClass: Class<*>,
 			socketClass: Class<*>
 	): String {
@@ -113,7 +113,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	 * @param socketClass The interface which is the socket for the metadata.
 	 * @return A string containing the content of OSGI-INF as appropriate for clazz.
 	 */
-	private fun <SocketT, PlugT : SocketT?> generatePluginTyped(
+	private fun <SocketT, PlugT : SocketT> generatePluginTyped(
 			plugClass: Class<PlugT>,
 			socketClass: Class<SocketT>
 	): String {
@@ -161,7 +161,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		 * @param toLinkAgainst the classes that these plugins implementations need
 		 * @return a map from component name to is OSGI-INF string content
 		 */
-		fun generate(toSearch: List<File?>?, toLinkAgainst: Set<File?>?): SortedMap<String, String> {
+		fun generate(toSearch: List<File>, toLinkAgainst: Set<File>): SortedMap<String, String> {
 			return try {
 				val ext = PlugGeneratorJavaExecable(toSearch, toLinkAgainst)
 				val metadataGen = PlugGenerator(ext.toSearch, ext.toLinkAgainst)
