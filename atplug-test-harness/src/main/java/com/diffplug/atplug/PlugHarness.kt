@@ -7,8 +7,6 @@
 package com.diffplug.atplug
 
 import java.lang.AutoCloseable
-import java.lang.Exception
-import kotlin.Throws
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -29,13 +27,11 @@ class PlugHarness : BeforeEachCallback, AfterEachCallback {
 
 	private var openHarness: AutoCloseable? = null
 
-	@Throws(Exception::class)
 	override fun beforeEach(context: ExtensionContext) {
 		assert(openHarness == null)
 		openHarness = start()
 	}
 
-	@Throws(Exception::class)
 	override fun afterEach(context: ExtensionContext) {
 		openHarness!!.close()
 		openHarness = null
