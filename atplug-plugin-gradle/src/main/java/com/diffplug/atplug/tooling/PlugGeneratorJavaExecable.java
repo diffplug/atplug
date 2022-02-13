@@ -45,7 +45,7 @@ public class PlugGeneratorJavaExecable implements JavaExecable {
 	}
 
 	@Override
-	public void run() throws Throwable {
+	public void run() {
 		PlugGenerator metadataGen = new PlugGenerator(toSearch, toLinkAgainst);
 		osgiInf = metadataGen.osgiInf;
 	}

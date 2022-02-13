@@ -44,12 +44,12 @@ subprojects {
 		ext.maven_name='AtPlug metadata generation Gradle plugin'
 		apply from: 干.file('base/gradle-plugin.gradle')
 		dependencies {
+			implementation "org.ow2.asm:asm:9.2"
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
 			implementation 'com.diffplug.gradle:goomph:3.35.0'
-			implementation "org.ow2.asm:asm:9.2"
-			testImplementation 'org.assertj:assertj-core:3.22.0'
 			testImplementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
+			testImplementation 'org.assertj:assertj-core:3.22.0'
 		}
 		tasks.named('test') {
 			dependsOn ':atplug-runtime:jar', ':atplug-runtime:testClasses'
