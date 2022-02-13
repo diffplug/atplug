@@ -16,7 +16,8 @@ class PlugHarness : BeforeEachCallback, AfterEachCallback {
 	var map = PlugInstanceMap()
 
 	fun <T> add(clazz: Class<T>, instance: T): PlugHarness {
-		map.put(clazz, instance)
+		val descriptor = SocketOwner.metadataGeneratorFor(clazz)(instance)
+		map.put(clazz.name, PlugDescriptor.fromJson(descriptor))
 		return this
 	}
 

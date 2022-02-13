@@ -10,20 +10,6 @@ class PlugInstanceMap {
 	internal val descriptorMap = mutableMapOf<String, MutableList<PlugDescriptor>>()
 	internal val instanceMap = mutableMapOf<PlugDescriptor, Any>()
 
-	fun <T> put(clazz: Class<T>, instance: T) {
-		val descriptors = descriptorMap.computeIfAbsent(clazz.name) { mutableListOf<PlugDescriptor>() }
-		val creatorClazz = clazz.classLoader.loadClass(clazz.name + "\$MetadataCreator")
-		val creator =
-				DeclarativeMetadataCreator.instantiate(creatorClazz) as DeclarativeMetadataCreator<T>
-		val map = creator.metadataGenerator.apply(instance)
-
-		val instanceClassName = instance!!::class.java.name
-		val descriptor = PlugDescriptor(instanceClassName, clazz.name, map)
-		descriptors.add(descriptor)
-
-		instanceMap.put(descriptor, instance)
-	}
-
 	fun put(clazz: String, descriptor: PlugDescriptor) {
 		val descriptors = descriptorMap.computeIfAbsent(clazz) { mutableListOf<PlugDescriptor>() }
 		descriptors.add(descriptor)
