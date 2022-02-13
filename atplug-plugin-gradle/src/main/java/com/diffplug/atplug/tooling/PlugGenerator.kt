@@ -15,7 +15,6 @@
  */
 package com.diffplug.atplug.tooling
 
-import com.diffplug.common.base.Throwables
 import java.io.File
 import java.lang.ClassNotFoundException
 import java.lang.Exception
@@ -143,13 +142,12 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 			try {
 				metadata.invoke(socket, instantiate(instanceClass)) as String
 			} catch (e: Exception) {
-				val rootCause = Throwables.getRootCause(e)
-				if (rootCause is ClassNotFoundException) {
+				if (rootCause(e) is ClassNotFoundException) {
 					throw RuntimeException(
 							"Unable to generate metadata for " +
 									instanceClass +
 									", missing transitive dependency " +
-									rootCause.message,
+									rootCause(e).message,
 							e)
 				} else {
 					throw RuntimeException(
@@ -179,7 +177,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 				// save our results, with no reference to the guts of what happened inside PluginMetadataGen
 				metadataGen.osgiInf
 			} catch (e: Exception) {
-				if (Throwables.getRootCause(e) is UnsatisfiedLinkError) {
+				if (rootCause(e) is UnsatisfiedLinkError) {
 					throw RuntimeException(
 							"This is probably caused by a classpath sticking around from a previous invocation.  Run `gradlew --stop` and try again.",
 							e)
@@ -208,5 +206,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 							Arrays.asList(*clazz.declaredConstructors))
 			return constructor!!.newInstance() as T
 		}
+
+		private fun rootCause(e: Throwable): Throwable = e.cause?.let { rootCause(it) } ?: e
 	}
 }

@@ -16,19 +16,13 @@
 package com.diffplug.atplug.tooling.gradle;
 
 
-import com.diffplug.common.base.Errors;
-import com.diffplug.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -44,8 +38,8 @@ public class ResourceHarness {
 	File folderDontUseDirectly;
 
 	/** Returns the root folder (canonicalized to fix OS X issue) */
-	protected File rootFolder() {
-		return Errors.rethrow().get(() -> folderDontUseDirectly.getCanonicalFile());
+	protected File rootFolder() throws IOException {
+		return folderDontUseDirectly.getCanonicalFile();
 	}
 
 	/** Returns a new child of the root folder. */
@@ -77,42 +71,6 @@ public class ResourceHarness {
 			throw new IllegalArgumentException("Replace was ineffective! '" + toReplace + "' was not found in " + path);
 		}
 		setFile(path).toContent(after);
-	}
-
-	/** Returns the contents of the given file from the src/test/resources directory. */
-	protected static String getTestResource(String filename) throws IOException {
-		URL url = ResourceHarness.class.getResource("/" + filename);
-		if (url == null) {
-			throw new IllegalArgumentException("No such resource " + filename);
-		}
-		return Resources.toString(url, StandardCharsets.UTF_8);
-	}
-
-	/** Returns Files (in a temporary folder) which has the contents of the given file from the src/test/resources directory. */
-	protected List<File> createTestFiles(String... filenames) throws IOException {
-		List<File> files = new ArrayList<>(filenames.length);
-		for (String filename : filenames) {
-			files.add(createTestFile(filename));
-		}
-		return files;
-	}
-
-	/** Returns a File (in a temporary folder) which has the contents of the given file from the src/test/resources directory. */
-	protected File createTestFile(String filename) throws IOException {
-		return createTestFile(filename, UnaryOperator.identity());
-	}
-
-	/**
-	 * Returns a File (in a temporary folder) which has the contents, possibly processed, of the given file from the
-	 * src/test/resources directory.
-	 */
-	protected File createTestFile(String filename, UnaryOperator<String> fileContentsProcessor) throws IOException {
-		int lastSlash = filename.lastIndexOf('/');
-		String name = lastSlash >= 0 ? filename.substring(lastSlash) : filename;
-		File file = newFile(name);
-		file.getParentFile().mkdirs();
-		Files.write(file.toPath(), fileContentsProcessor.apply(getTestResource(filename)).getBytes(StandardCharsets.UTF_8));
-		return file;
 	}
 
 	protected ReadAsserter assertFile(String path) throws IOException {
@@ -157,11 +115,6 @@ public class ResourceHarness {
 
 		public File toContent(String content, Charset charset) throws IOException {
 			Files.write(file.toPath(), content.getBytes(charset));
-			return file;
-		}
-
-		public File toResource(String path) throws IOException {
-			Files.write(file.toPath(), getTestResource(path).getBytes(StandardCharsets.UTF_8));
 			return file;
 		}
 

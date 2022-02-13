@@ -1,7 +1,6 @@
 package com.diffplug.atplug.tooling
 
 import com.diffplug.atplug.tooling.gradle.ResourceHarness
-import com.diffplug.common.base.StandardSystemProperty
 import java.io.File
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.attributes.Bundling
@@ -14,7 +13,7 @@ class PlugGeneratorTest : ResourceHarness() {
 		val atplug_runtime = mutableSetOf(File("../atplug-runtime/build/libs/atplug-runtime-0.1.0.jar"))
 		val transitives = listOf("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
-		val userHome = File(StandardSystemProperty.USER_HOME.value())
+		val userHome = File(System.getProperty("user.home"))
 		val project =
 				ProjectBuilder.builder()
 						.withGradleUserHomeDir(File(userHome, ".gradle"))

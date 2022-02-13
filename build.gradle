@@ -27,7 +27,6 @@ subprojects {
 	}
 
 	ext.kotlin_jvmTarget = '1.8'
-	String VER_DURIAN = '1.2.0'
 	if (it.name == 'atplug-runtime') {
 		ext.maven_name = 'AtPlug runtime'
 		apply plugin: 'kotlinx-serialization'
@@ -45,10 +44,7 @@ subprojects {
 		apply from: 干.file('base/gradle-plugin.gradle')
 		dependencies {
 			implementation "org.ow2.asm:asm:9.2"
-			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
-			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
 			implementation 'com.diffplug.gradle:goomph:3.35.0'
-			testImplementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
 			testImplementation 'org.assertj:assertj-core:3.22.0'
 		}
 		tasks.named('test') {
@@ -56,6 +52,7 @@ subprojects {
 		}
 	} else if (it.name == 'atplug-osgi') {
 		ext.maven_name = 'AtPlug for OSGi'
+		String VER_DURIAN = '1.2.0'
 		dependencies {
 			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
 			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"

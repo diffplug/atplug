@@ -17,16 +17,8 @@ package com.diffplug.atplug.tooling.gradle;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.diffplug.common.base.Errors;
-import com.diffplug.common.base.StandardSystemProperty;
-import com.diffplug.common.base.StringPrinter;
-import com.diffplug.common.tree.TreeDef;
-import com.diffplug.common.tree.TreeStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.BuildTask;
@@ -60,31 +52,6 @@ public class GradleIntegrationHarness extends ResourceHarness {
 				.withPluginClasspath();
 	}
 
-	/** Dumps the complete file contents of the folder to the console. */
-	protected String getContents() throws IOException {
-		return getContents(subPath -> !subPath.startsWith(".gradle"));
-	}
-
-	protected String getContents(Predicate<String> subpathsToInclude) throws IOException {
-		TreeDef<File> treeDef = TreeDef.forFile(Errors.rethrow());
-		List<File> files = TreeStream.depthFirst(treeDef, rootFolder())
-				.filter(File::isFile)
-				.collect(Collectors.toList());
-
-		ListIterator<File> iterator = files.listIterator(files.size());
-		int rootLength = rootFolder().getAbsolutePath().length() + 1;
-		return StringPrinter.buildString(printer -> Errors.rethrow().run(() -> {
-			while (iterator.hasPrevious()) {
-				File file = iterator.previous();
-				String subPath = file.getAbsolutePath().substring(rootLength);
-				if (subpathsToInclude.test(subPath)) {
-					printer.println("### " + subPath + " ###");
-					printer.println(read(subPath));
-				}
-			}
-		}));
-	}
-
 	protected void checkRunsThenUpToDate() throws IOException {
 		checkIsUpToDate(false);
 		checkIsUpToDate(true);
@@ -98,10 +65,14 @@ public class GradleIntegrationHarness extends ResourceHarness {
 		taskIsUpToDate("spotlessCheck", upToDate);
 	}
 
-	private static final int FILESYSTEM_RESOLUTION_MS = StandardSystemProperty.LINE_SEPARATOR.value().equals("\r\n") ? 150 : 2000;
+	private static final int FILESYSTEM_RESOLUTION_MS = System.getProperty("line.separator").equals("\r\n") ? 150 : 2000;
 
 	void pauseForFilesystem() {
-		Errors.rethrow().run(() -> Thread.sleep(FILESYSTEM_RESOLUTION_MS));
+		try {
+			Thread.sleep(FILESYSTEM_RESOLUTION_MS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void taskIsUpToDate(String task, boolean upToDate) throws IOException {
@@ -129,10 +100,10 @@ public class GradleIntegrationHarness extends ResourceHarness {
 	}
 
 	static String buildResultToString(BuildResult result) {
-		return StringPrinter.buildString(printer -> {
-			for (BuildTask task : result.getTasks()) {
-				printer.println(task.getPath() + " " + task.getOutcome());
-			}
-		});
+		StringBuilder builder = new StringBuilder();
+		for (BuildTask task : result.getTasks()) {
+			builder.append(task.getPath() + " " + task.getOutcome() + "\n");
+		}
+		return builder.toString();
 	}
 }
