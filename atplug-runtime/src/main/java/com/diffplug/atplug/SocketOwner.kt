@@ -6,17 +6,17 @@
  */
 package com.diffplug.atplug
 
+import java.lang.Exception
+import java.lang.IllegalArgumentException
+import java.lang.RuntimeException
 import java.util.*
 import java.util.function.Predicate
 
 abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	abstract fun metadata(plug: T): Map<String, String>
 
-	fun asDescriptor(plug: T): String {
-		val data = metadata(plug)
-		val descriptor = PlugDescriptor(plug!!::class.java.name, socketClass.name, data)
-		return descriptor.toJson()
-	}
+	fun asDescriptor(plug: T) =
+			PlugDescriptor(plug!!::class.java.name, socketClass.name, metadata(plug))
 
 	/**
 	 * Instantiates the given plug. Already implemented by the default implementations [Id] and
@@ -143,9 +143,58 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 				return descriptorById[id]
 			}
 		}
+	}
 
-		companion object {
-			const val KEY_ID = "id"
+	companion object {
+		const val KEY_ID = "id"
+
+		fun <T> metadataGeneratorFor(socketClass: Class<T>): (T) -> String {
+			var firstAttempt: Throwable? = null
+			try {
+				val socketOwnerClass = Class.forName(socketClass.name + "\$Socket").kotlin
+				val socket = socketOwnerClass.objectInstance!! as SocketOwner<T>
+				return generatorForSocket(socket)
+			} catch (e: Throwable) {
+				firstAttempt = e
+			}
+			try {
+				val socketField = socketClass.getDeclaredField("socket")
+				val socket = socketField[null] as SocketOwner<T>
+				return generatorForSocket(socket)
+			} catch (secondAttempt: Throwable) {
+				val e =
+						IllegalArgumentException(
+								"To create metadata for `$socketClass` we need either a field `socket` or a kotlin `object Socket`.",
+								firstAttempt)
+				e.addSuppressed(secondAttempt)
+				throw e
+			}
 		}
+
+		private fun <T> generatorForSocket(socket: SocketOwner<T>): (T) -> String {
+			return { plug ->
+				try {
+					socket.asDescriptor(plug).toJson()
+				} catch (e: Exception) {
+					if (rootCause(e) is ClassNotFoundException) {
+						throw RuntimeException(
+								"Unable to generate metadata for " +
+										plug!!::class.java +
+										", missing transitive dependency " +
+										rootCause(e).message,
+								e)
+					} else {
+						throw RuntimeException(
+								"Unable to generate metadata for " +
+										plug!!::class.java +
+										", make sure that its metadata methods return simple constants: " +
+										e.message,
+								e)
+					}
+				}
+			}
+		}
+
+		private fun rootCause(e: Throwable): Throwable = e.cause?.let { rootCause(it) } ?: e
 	}
 }

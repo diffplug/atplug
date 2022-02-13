@@ -18,7 +18,6 @@ package com.diffplug.atplug.tooling
 import java.io.File
 import java.lang.ClassNotFoundException
 import java.lang.Exception
-import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.lang.UnsatisfiedLinkError
 import java.lang.reflect.Constructor
@@ -31,6 +30,9 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
 import java.util.function.Function
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.companionObjectInstance
+import kotlin.reflect.full.memberFunctions
 
 class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: Set<File>) {
 	@JvmField val osgiInf: SortedMap<String, String> = TreeMap()
@@ -39,7 +41,9 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	private val metadataCreatorCache = mutableMapOf<Class<*>, Function<Class<*>, String>>()
 
 	private val classLoader: URLClassLoader
-	private val socketClass: Class<*>
+
+	private val socketOwnerCompanionObject: Any
+	private val metadataGeneratorFor: KFunction<(Any) -> String>
 
 	init {
 		// create a classloader which looks in toSearch first, then each of the jars in toLinkAgainst
@@ -47,7 +51,13 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		val parent: ClassLoader? =
 				null // explicitly set parent to null so that the classloader is completely isolated
 		classLoader = URLClassLoader(urls, parent)
-		socketClass = classLoader.loadClass("com.diffplug.atplug.SocketOwner")
+		val socketOwner = classLoader.loadClass("com.diffplug.atplug.SocketOwner").kotlin
+		socketOwnerCompanionObject = socketOwner.companionObjectInstance!!
+		metadataGeneratorFor =
+				socketOwnerCompanionObject::class.memberFunctions.find {
+					it.name == "metadataGeneratorFor"
+				}!! as
+						KFunction<(Any) -> String>
 		try {
 			val parser = PlugParser()
 			// walk toSearch, passing each classfile to load()
@@ -109,27 +119,8 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	): String {
 		val metadataCreator =
 				metadataCreatorCache.computeIfAbsent(socketClass) { interfase: Class<*> ->
-					var firstAttempt: Throwable? = null
-					try {
-						val socketOwnerClass = classLoader.loadClass(interfase.name + "\$Socket").kotlin
-						val socket = socketOwnerClass.objectInstance!!
-						return@computeIfAbsent generatorForSocket(socket)
-					} catch (e: Throwable) {
-						firstAttempt = e
-					}
-					try {
-						val socketClazz = classLoader.loadClass(interfase.name)
-						val socketField = socketClazz.getDeclaredField("socket")
-						val socket = socketField[null]
-						return@computeIfAbsent generatorForSocket(socket)
-					} catch (secondAttempt: Throwable) {
-						val e =
-								IllegalArgumentException(
-										"To create metadata for `$plugClass` we need either a field `socket` in `$interfase` or a kotlin `object Socket`.",
-										firstAttempt)
-						e.addSuppressed(secondAttempt)
-						throw e
-					}
+					val generator = metadataGeneratorFor.call(socketOwnerCompanionObject, interfase)
+					Function<Class<*>, String> { clazz -> generator.invoke(clazz) }
 				}
 		return metadataCreator.apply(plugClass)
 	}

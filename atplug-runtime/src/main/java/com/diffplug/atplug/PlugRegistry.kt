@@ -7,9 +7,10 @@
 package com.diffplug.atplug
 
 import java.io.ByteArrayOutputStream
-import java.lang.AssertionError
+import java.lang.reflect.Constructor
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.util.*
 import java.util.jar.Manifest
 
 interface PlugRegistry {
@@ -99,10 +100,26 @@ interface PlugRegistry {
 		override fun <T> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T {
 			val value =
 					lastHarness?.instanceFor(plugDescriptor)
-							?: DeclarativeMetadataCreator.instantiate(
-									Class.forName(plugDescriptor.implementation))
+							?: instantiate(Class.forName(plugDescriptor.implementation))
 			assert(socketClass.isInstance(value))
 			return value as T
+		}
+
+		private fun <T> instantiate(clazz: Class<out T>): T {
+			var constructor: Constructor<*>? = null
+			for (candidate in clazz.declaredConstructors) {
+				if (candidate.parameterCount == 0) {
+					constructor = candidate
+					break
+				}
+			}
+			requireNotNull(constructor) {
+				"Class must have a no-arg constructor, but it didn't.  " +
+						clazz +
+						" " +
+						Arrays.asList(*clazz.constructors)
+			}
+			return constructor.newInstance() as T
 		}
 
 		private var lastHarness: PlugInstanceMap? = null
