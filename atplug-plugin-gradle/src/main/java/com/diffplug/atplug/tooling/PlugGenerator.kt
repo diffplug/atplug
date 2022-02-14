@@ -16,7 +16,6 @@
 package com.diffplug.atplug.tooling
 
 import java.io.File
-import java.lang.ClassNotFoundException
 import java.lang.Exception
 import java.lang.RuntimeException
 import java.lang.UnsatisfiedLinkError
@@ -39,11 +38,9 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 
 	/** A cache from a plugin interface to a function that converts a class into its metadata. */
 	private val metadataCreatorCache = mutableMapOf<Class<*>, Function<Class<*>, String>>()
-
 	private val classLoader: URLClassLoader
-
 	private val socketOwnerCompanionObject: Any
-	private val metadataGeneratorFor: KFunction<(Any) -> String>
+	private val metadataGeneratorFor: KFunction<Function<Any, String>>
 
 	init {
 		// create a classloader which looks in toSearch first, then each of the jars in toLinkAgainst
@@ -57,7 +54,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 				socketOwnerCompanionObject::class.memberFunctions.find {
 					it.name == "metadataGeneratorFor"
 				}!! as
-						KFunction<(Any) -> String>
+						KFunction<Function<Any, String>>
 		try {
 			val parser = PlugParser()
 			// walk toSearch, passing each classfile to load()
@@ -120,36 +117,9 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		val metadataCreator =
 				metadataCreatorCache.computeIfAbsent(socketClass) { interfase: Class<*> ->
 					val generator = metadataGeneratorFor.call(socketOwnerCompanionObject, interfase)
-					Function<Class<*>, String> { clazz -> generator.invoke(clazz) }
+					Function<Class<*>, String> { clazz -> generator.apply(instantiate(clazz)) }
 				}
 		return metadataCreator.apply(plugClass)
-	}
-
-	private fun generatorForSocket(socket: Any): Function<Class<*>, String> {
-		val socketOwnerClazz: Class<*> = socket.javaClass
-		val metadata = socketOwnerClazz.getMethod("asDescriptor", Any::class.java)
-		metadata.isAccessible = true
-		return Function { instanceClass: Class<*> ->
-			try {
-				metadata.invoke(socket, instantiate(instanceClass)) as String
-			} catch (e: Exception) {
-				if (rootCause(e) is ClassNotFoundException) {
-					throw RuntimeException(
-							"Unable to generate metadata for " +
-									instanceClass +
-									", missing transitive dependency " +
-									rootCause(e).message,
-							e)
-				} else {
-					throw RuntimeException(
-							"Unable to generate metadata for " +
-									instanceClass +
-									", make sure that its metadata methods return simple constants: " +
-									e.message,
-							e)
-				}
-			}
-		}
 	}
 
 	companion object {
@@ -189,13 +159,13 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 					break
 				}
 			}
-			Objects.requireNonNull(
-					constructor,
-					"Class must have a no-arg constructor, but it didn't.  " +
-							clazz +
-							" " +
-							Arrays.asList(*clazz.declaredConstructors))
-			return constructor!!.newInstance() as T
+			requireNotNull(constructor) {
+				"Class must have a no-arg constructor, but it didn't.  " +
+						clazz +
+						" " +
+						listOf(*clazz.declaredConstructors)
+			}
+			return constructor.newInstance() as T
 		}
 
 		private fun rootCause(e: Throwable): Throwable = e.cause?.let { rootCause(it) } ?: e

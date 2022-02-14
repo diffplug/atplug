@@ -9,14 +9,16 @@ package com.diffplug.atplug
 import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
+import java.lang.reflect.Modifier
 import java.util.*
+import java.util.function.Function
 import java.util.function.Predicate
 
 abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	abstract fun metadata(plug: T): Map<String, String>
 
 	fun asDescriptor(plug: T) =
-			PlugDescriptor(plug!!::class.java.name, socketClass.name, metadata(plug))
+			PlugDescriptor(plug!!::class.java.name, socketClass.name, metadata(plug)).toJson()
 
 	/**
 	 * Instantiates the given plug. Already implemented by the default implementations [Id] and
@@ -148,33 +150,35 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	companion object {
 		const val KEY_ID = "id"
 
-		fun <T> metadataGeneratorFor(socketClass: Class<T>): (T) -> String {
+		fun <T> metadataGeneratorFor(socketClass: Class<T>): Function<T, String> {
 			var firstAttempt: Throwable? = null
 			try {
-				val socketOwnerClass = Class.forName(socketClass.name + "\$Socket").kotlin
-				val socket = socketOwnerClass.objectInstance!! as SocketOwner<T>
-				return generatorForSocket(socket)
+				val socketField = socketClass.getDeclaredField("socket")!!
+				if (Modifier.isStatic(socketField.modifiers) && Modifier.isFinal(socketField.modifiers)) {
+					val socket = socketField[null] as SocketOwner<T>
+					return generatorForSocket(socket)
+				}
 			} catch (e: Throwable) {
 				firstAttempt = e
 			}
 			try {
-				val socketField = socketClass.getDeclaredField("socket")
-				val socket = socketField[null] as SocketOwner<T>
+				val socketOwnerClass = Class.forName(socketClass.name + "\$Socket").kotlin
+				val socket = socketOwnerClass.objectInstance!! as SocketOwner<T>
 				return generatorForSocket(socket)
 			} catch (secondAttempt: Throwable) {
 				val e =
 						IllegalArgumentException(
-								"To create metadata for `$socketClass` we need either a field `socket` or a kotlin `object Socket`.",
-								firstAttempt)
-				e.addSuppressed(secondAttempt)
+								"To create metadata for `$socketClass` we need either a field `static final SocketOwner socket` or a kotlin `object Socket`.",
+								secondAttempt)
+				firstAttempt?.let(e::addSuppressed)
 				throw e
 			}
 		}
 
-		private fun <T> generatorForSocket(socket: SocketOwner<T>): (T) -> String {
-			return { plug ->
+		private fun <T> generatorForSocket(socket: SocketOwner<T>): Function<T, String> {
+			return Function { plug ->
 				try {
-					socket.asDescriptor(plug).toJson()
+					socket.asDescriptor(plug)
 				} catch (e: Exception) {
 					if (rootCause(e) is ClassNotFoundException) {
 						throw RuntimeException(

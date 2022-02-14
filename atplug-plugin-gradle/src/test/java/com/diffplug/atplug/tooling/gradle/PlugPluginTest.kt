@@ -31,7 +31,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 		copy("Fruit.kt")
 		copy("Shape.java")
 
-		gradleRunner().withArguments("jar").build()
+		gradleRunner().withArguments("jar", "--stacktrace").build()
 
 		assertFile("src/main/resources/OSGI-INF/com.diffplug.atplug.Apple.xml")
 				.hasContent(

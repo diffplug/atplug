@@ -11,7 +11,10 @@ import org.junit.jupiter.api.Test
 class PlugGeneratorTest : ResourceHarness() {
 	fun deps(): Set<File> {
 		val atplug_runtime = mutableSetOf(File("../atplug-runtime/build/libs/atplug-runtime-0.1.0.jar"))
-		val transitives = listOf("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+		val transitives =
+				listOf(
+						"org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2",
+						"org.jetbrains.kotlin:kotlin-reflect:1.6.10")
 
 		val userHome = File(System.getProperty("user.home"))
 		val project =
