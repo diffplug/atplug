@@ -15,5 +15,10 @@ class PlugInstanceMap {
 		descriptors.add(descriptor)
 	}
 
+	fun <T> put(clazz: Class<T>, descriptor: PlugDescriptor, instance: T) {
+		put(clazz.name, descriptor)
+		instanceMap[descriptor] = instance!!
+	}
+
 	fun instanceFor(plugDescriptor: PlugDescriptor) = instanceMap[plugDescriptor]
 }
