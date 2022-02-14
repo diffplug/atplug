@@ -37,6 +37,7 @@ subprojects {
 		ext.maven_name='AtPlug test harness'
 		dependencies {
 			api "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
+			implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
 			implementation project(':atplug-runtime')
 		}
 	} else if (it.name == 'atplug-plugin-gradle') {
