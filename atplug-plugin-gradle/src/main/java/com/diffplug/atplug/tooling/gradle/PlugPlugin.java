@@ -24,6 +24,8 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
@@ -49,10 +51,16 @@ public class PlugPlugin implements Plugin<Project> {
 		JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 		SourceSet main = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
 
+		Dependency dep = project.getDependencies().create("org.jetbrains.kotlin:kotlin-reflect:1.6.10");
+		Configuration plugGenConfig = project.getConfigurations().create("plugGenerate", plugGen -> {
+			plugGen.extendsFrom(project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME));
+			plugGen.getDependencies().add(dep);
+		});
+
 		// jar --dependsOn--> plugGenerate
 		TaskProvider<PlugGenerateTask> generateTask = project.getTasks().register(GENERATE, PlugGenerateTask.class, task -> {
 			task.setClassesFolders(main.getOutput().getClassesDirs());
-			task.getJarsToLinkAgainst().setFrom(project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME));
+			task.getJarsToLinkAgainst().setFrom(plugGenConfig);
 			task.resourcesFolder = main.getResources().getSourceDirectories().getSingleFile();
 			// dep on java
 			for (String taskName : Arrays.asList(
