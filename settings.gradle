@@ -9,6 +9,7 @@ pluginManagement {
 		id 'org.jetbrains.kotlin.plugin.serialization' version '1.6.10'
 		id 'com.gradle.plugin-publish'                 version '0.20.0'
 		id 'io.github.gradle-nexus.publish-plugin'     version '1.1.0'
+		id 'org.jdrupes.mdoclet'                       version '1.0.10'
 	}
 }
 plugins {
@@ -20,6 +21,7 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.serialization' apply false
 	id 'com.gradle.plugin-publish'                 apply false
 	id 'io.github.gradle-nexus.publish-plugin'     apply false
+	id 'org.jdrupes.mdoclet'                       apply false
 }
 
 blowdryerSetup {
