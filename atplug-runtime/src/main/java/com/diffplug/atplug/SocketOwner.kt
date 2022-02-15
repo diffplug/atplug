@@ -34,7 +34,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	protected abstract fun register(plugDescriptor: PlugDescriptor)
 
 	internal fun doRemove(plugDescriptor: PlugDescriptor) {
-		register(plugDescriptor)
+		remove(plugDescriptor)
 	}
 
 	protected abstract fun remove(plugDescriptor: PlugDescriptor)
@@ -120,6 +120,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 				val id = plugDescriptor.properties[KEY_ID]!!
 				val removed = descriptorById.remove(id)
 				assert(removed != null)
+				instanceById.remove(id)
 				removeHook(plugDescriptor)
 			}
 		}
