@@ -2,6 +2,7 @@ package com.diffplug.atplug.tooling
 
 import com.diffplug.atplug.tooling.gradle.ResourceHarness
 import java.io.File
+import java.util.*
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.attributes.Bundling
 import org.gradle.testfixtures.ProjectBuilder
@@ -9,8 +10,17 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class PlugGeneratorTest : ResourceHarness() {
+	companion object {
+		internal fun findRuntimeJar(): File {
+			val folder = File("../atplug-runtime/build/libs")
+			val files = folder.listFiles()
+			Arrays.sort(files)
+			return files.last { it.name.endsWith(".jar") && it.name.startsWith("atplug-runtime-") }
+		}
+	}
+
 	fun deps(): Set<File> {
-		val atplug_runtime = mutableSetOf(File("../atplug-runtime/build/libs/atplug-runtime-0.1.0.jar"))
+		val atplug_runtime = mutableSetOf(findRuntimeJar())
 		val transitives =
 				listOf(
 						"org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2",

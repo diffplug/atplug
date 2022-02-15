@@ -1,5 +1,6 @@
 package com.diffplug.atplug.tooling.gradle
 
+import com.diffplug.atplug.tooling.PlugGeneratorTest
 import java.io.File
 import java.nio.file.Files
 import org.junit.jupiter.api.Test
@@ -7,7 +8,7 @@ import org.junit.jupiter.api.Test
 class PlugPluginTest : GradleIntegrationHarness() {
 	@Test
 	fun test() {
-		val runtimeJar = File("../atplug-runtime/build/libs/atplug-runtime-0.1.0.jar").canonicalPath
+		val runtimeJar = PlugGeneratorTest.findRuntimeJar().canonicalPath
 		setFile("build.gradle")
 				.toContent(
 						"""
