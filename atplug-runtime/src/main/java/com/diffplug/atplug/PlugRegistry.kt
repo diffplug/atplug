@@ -30,16 +30,14 @@ interface PlugRegistry {
 		}
 
 		private const val PATH_MANIFEST = "META-INF/MANIFEST.MF"
-		private const val DS_WITHIN_MANIFEST = "Service-Component"
+		private const val DS_WITHIN_MANIFEST = "AtPlug-Component"
 
 		internal fun parseComponent(manifestUrl: String, servicePath: String): PlugDescriptor {
 			val serviceUrl =
 					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
 
 			val out = ByteArrayOutputStream()
-			serviceUrl.openStream().use {
-				it.copyTo(out)
-			}
+			serviceUrl.openStream().use { it.copyTo(out) }
 			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
 			return PlugDescriptor.fromJson(serviceFileContent)
 		}
@@ -72,12 +70,8 @@ interface PlugRegistry {
 							for (service in
 									services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
 								val servicePath = service.trim { it <= ' ' }
-								if (!servicePath.isEmpty()) {
+								if (servicePath.isNotEmpty()) {
 									val asString = manifestUrl.toExternalForm()
-									if (asString.contains("org.eclipse.core.contenttype")) {
-										// causes noisy errors
-										continue
-									}
 									val component = parseComponent(asString, servicePath)
 									synchronized(this) {
 										data.put(component.provides, component)

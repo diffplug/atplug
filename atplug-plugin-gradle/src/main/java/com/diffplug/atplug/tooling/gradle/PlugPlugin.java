@@ -40,9 +40,9 @@ import org.gradle.jvm.tasks.Jar;
 public class PlugPlugin implements Plugin<Project> {
 	static final String GENERATE = "plugGenerate";
 
-	static final String SERVICE_COMPONENT = "Service-Component";
-	static final String DOT_XML = ".xml";
-	static final String OSGI_INF = "OSGI-INF/";
+	static final String SERVICE_COMPONENT = "AtPlug-Component";
+	static final String DOT_JSON = ".json";
+	static final String ATPLUG_INF = "ATPLUG-INF/";
 
 	@Override
 	public void apply(Project project) {
@@ -76,22 +76,22 @@ public class PlugPlugin implements Plugin<Project> {
 		project.getTasks().named(JavaPlugin.JAR_TASK_NAME).configure(jarTaskUntyped -> {
 			Jar jarTask = (Jar) jarTaskUntyped;
 			PlugGenerateTask metadataTask = generateTask.get();
-			jarTask.getInputs().dir(metadataTask.getOsgiInfFolder());
-			jarTask.doFirst("Set " + PlugPlugin.SERVICE_COMPONENT + " header", new SetServiceComponentHeader(metadataTask.getOsgiInfFolder()));
+			jarTask.getInputs().dir(metadataTask.getAtplugInfFolder());
+			jarTask.doFirst("Set " + PlugPlugin.SERVICE_COMPONENT + " header", new SetServiceComponentHeader(metadataTask.getAtplugInfFolder()));
 		});
 		project.getTasks().named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME).configure(t -> t.dependsOn(generateTask));
 	}
 
 	static class SetServiceComponentHeader implements Serializable, Action<Task> {
-		private final File osgiInfFolder;
+		private final File atplugInfFolder;
 
-		SetServiceComponentHeader(File osgiInfFolder) {
-			this.osgiInfFolder = osgiInfFolder;
+		SetServiceComponentHeader(File atplugInfFolder) {
+			this.atplugInfFolder = atplugInfFolder;
 		}
 
 		@Override
 		public void execute(Task task) {
-			String serviceComponents = PlugGenerateTask.serviceComponents(osgiInfFolder);
+			String serviceComponents = PlugGenerateTask.serviceComponents(atplugInfFolder);
 			Jar jarTask = (Jar) task;
 			if (serviceComponents == null) {
 				jarTask.getManifest().getAttributes().remove(PlugPlugin.SERVICE_COMPONENT);

@@ -99,8 +99,8 @@ public abstract class PlugGenerateTask extends DefaultTask {
 	}
 
 	@OutputDirectory
-	public File getOsgiInfFolder() {
-		return new File(resourcesFolder, PlugPlugin.OSGI_INF);
+	public File getAtplugInfFolder() {
+		return new File(resourcesFolder, PlugPlugin.ATPLUG_INF);
 	}
 
 	@InputFiles
@@ -126,9 +126,9 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		SortedMap<String, String> result = generate();
 
 		// clean out the osgiInf folder, and put the map's content into the folder
-		FileMisc.cleanDir(getOsgiInfFolder());
+		FileMisc.cleanDir(getAtplugInfFolder());
 		for (Map.Entry<String, String> entry : result.entrySet()) {
-			File serviceFile = new File(getOsgiInfFolder(), entry.getKey() + PlugPlugin.DOT_XML);
+			File serviceFile = new File(getAtplugInfFolder(), entry.getKey() + PlugPlugin.DOT_JSON);
 			Files.write(serviceFile.toPath(), entry.getValue().getBytes(StandardCharsets.UTF_8));
 		}
 
@@ -190,15 +190,15 @@ public abstract class PlugGenerateTask extends DefaultTask {
 					options.setExecutable(getLauncher().get().getExecutablePath());
 				});
 			});
-			return JavaExecable.exec(workQueue, input).getOsgiInf();
+			return JavaExecable.exec(workQueue, input).getAtplugInf();
 		} else {
 			input.run();
-			return input.getOsgiInf();
+			return input.getAtplugInf();
 		}
 	}
 
 	private String serviceComponents() {
-		return serviceComponents(getOsgiInfFolder());
+		return serviceComponents(getAtplugInfFolder());
 	}
 
 	static String serviceComponents(File osgiInf) {
@@ -207,8 +207,8 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		} else {
 			List<String> serviceComponents = new ArrayList<>();
 			for (File file : FileMisc.list(osgiInf)) {
-				if (file.getName().endsWith(PlugPlugin.DOT_XML)) {
-					serviceComponents.add(PlugPlugin.OSGI_INF + file.getName());
+				if (file.getName().endsWith(PlugPlugin.DOT_JSON)) {
+					serviceComponents.add(PlugPlugin.ATPLUG_INF + file.getName());
 				}
 			}
 			Collections.sort(serviceComponents);

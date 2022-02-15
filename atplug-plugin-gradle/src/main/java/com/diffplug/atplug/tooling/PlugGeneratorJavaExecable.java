@@ -38,15 +38,15 @@ public class PlugGeneratorJavaExecable implements JavaExecable {
 	}
 
 	// outputs
-	SortedMap<String, String> osgiInf;
+	SortedMap<String, String> atplugInf;
 
-	public SortedMap<String, String> getOsgiInf() {
-		return osgiInf;
+	public SortedMap<String, String> getAtplugInf() {
+		return atplugInf;
 	}
 
 	@Override
 	public void run() {
 		PlugGenerator metadataGen = new PlugGenerator(toSearch, toLinkAgainst);
-		osgiInf = metadataGen.osgiInf;
+		atplugInf = metadataGen.atplugInf;
 	}
 }

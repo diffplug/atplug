@@ -34,7 +34,7 @@ import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.memberFunctions
 
 class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: Set<File>) {
-	@JvmField val osgiInf: SortedMap<String, String> = TreeMap()
+	@JvmField val atplugInf: SortedMap<String, String> = TreeMap()
 
 	/** A cache from a plugin interface to a function that converts a class into its metadata. */
 	private val metadataCreatorCache = mutableMapOf<Class<*>, Function<Class<*>, String>>()
@@ -91,8 +91,8 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		require(!Modifier.isAbstract(plugClass.modifiers)) {
 			"Class $plugClass has @Plug($socketClass) but it is abstract."
 		}
-		val osgiInfContent = generatePlugin<Any, Any>(plugClass, socketClass)
-		osgiInf[plugClass.name] = osgiInfContent
+		val atplugInfContent = generatePlugin<Any, Any>(plugClass, socketClass)
+		atplugInf[plugClass.name] = atplugInfContent
 	}
 
 	private fun <SocketT, PlugT : SocketT> generatePlugin(
@@ -136,7 +136,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 				val ext = PlugGeneratorJavaExecable(toSearch, toLinkAgainst)
 				val metadataGen = PlugGenerator(ext.toSearch, ext.toLinkAgainst)
 				// save our results, with no reference to the guts of what happened inside PluginMetadataGen
-				metadataGen.osgiInf
+				metadataGen.atplugInf
 			} catch (e: Exception) {
 				if (rootCause(e) is UnsatisfiedLinkError) {
 					throw RuntimeException(
