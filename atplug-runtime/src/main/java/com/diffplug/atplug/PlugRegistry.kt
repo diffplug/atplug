@@ -37,8 +37,10 @@ interface PlugRegistry {
 					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
 
 			val out = ByteArrayOutputStream()
-			serviceUrl.openStream().transferTo(out)
-			val serviceFileContent = out.toString(StandardCharsets.UTF_8)
+			serviceUrl.openStream().use {
+				it.copyTo(out)
+			}
+			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
 			return PlugDescriptor.fromJson(serviceFileContent)
 		}
 

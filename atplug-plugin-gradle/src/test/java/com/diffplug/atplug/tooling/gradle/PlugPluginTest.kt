@@ -63,7 +63,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 								"    }\n" +
 								"}")
 		assertFile("src/main/resources/META-INF/MANIFEST.MF")
-				.hasContent(
+				.hasContentIgnoreWhitespace(
 						"Manifest-Version: 1.0\n" +
 								"Service-Component: OSGI-INF/com.diffplug.atplug.Apple.xml,OSGI-INF/com.d\n" +
 								" iffplug.atplug.Orange.xml,OSGI-INF/com.diffplug.atplug.Shape\$Circle.xml\n" +

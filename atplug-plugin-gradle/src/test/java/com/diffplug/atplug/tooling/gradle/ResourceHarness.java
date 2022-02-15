@@ -91,6 +91,12 @@ public class ResourceHarness {
 		public void hasContent(String expected) {
 			Assertions.assertEquals(expected, content);
 		}
+
+		public void hasContentIgnoreWhitespace(String expected) {
+			String actualClean = content.replace("\n", "").replace(" ", "");
+			String expectedClean = expected.replace("\n", "").replace(" ", "");
+			Assertions.assertEquals(expectedClean, actualClean);
+		}
 	}
 
 	protected WriteAsserter setFile(String path) throws IOException {
