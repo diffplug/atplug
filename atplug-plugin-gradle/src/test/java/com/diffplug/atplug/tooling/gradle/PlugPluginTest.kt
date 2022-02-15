@@ -2,6 +2,7 @@ package com.diffplug.atplug.tooling.gradle
 
 import com.diffplug.atplug.tooling.PlugGeneratorTest
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import org.junit.jupiter.api.Test
 
@@ -27,7 +28,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 
 		val copy = { str: String ->
 			val src = File("../atplug-runtime/src/test/java/com/diffplug/atplug/$str")
-			setFile("src/main/java/com/diffplug/atplug/$str").toContent(Files.readString(src.toPath()))
+			setFile("src/main/java/com/diffplug/atplug/$str").toContent(String(Files.readAllBytes(src.toPath()), StandardCharsets.UTF_8))
 		}
 		copy("Fruit.kt")
 		copy("Shape.java")
