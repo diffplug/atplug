@@ -34,7 +34,7 @@ import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.memberFunctions
 
 class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: Set<File>) {
-	@JvmField val osgiInf: SortedMap<String, String> = TreeMap()
+	@JvmField val atplugInf: SortedMap<String, String> = TreeMap()
 
 	/** A cache from a plugin interface to a function that converts a class into its metadata. */
 	private val metadataCreatorCache = mutableMapOf<Class<*>, Function<Class<*>, String>>()
@@ -91,8 +91,8 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		require(!Modifier.isAbstract(plugClass.modifiers)) {
 			"Class $plugClass has @Plug($socketClass) but it is abstract."
 		}
-		val osgiInfContent = generatePlugin<Any, Any>(plugClass, socketClass)
-		osgiInf[plugClass.name] = osgiInfContent
+		val atplugInfContent = generatePlugin<Any, Any>(plugClass, socketClass)
+		atplugInf[plugClass.name] = atplugInfContent
 	}
 
 	private fun <SocketT, PlugT : SocketT> generatePlugin(
@@ -108,7 +108,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	/**
 	 * @param plugClass The class for which we are generating plugin metadata.
 	 * @param socketClass The interface which is the socket for the metadata.
-	 * @return A string containing the content of OSGI-INF as appropriate for clazz.
+	 * @return A string containing the content of ATPLUG-INF as appropriate for clazz.
 	 */
 	private fun <SocketT, PlugT : SocketT> generatePluginTyped(
 			plugClass: Class<PlugT>,
@@ -124,19 +124,19 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 
 	companion object {
 		/**
-		 * Returns a Map from a plugin's name to its OSGI-INF content.
+		 * Returns a Map from a plugin's name to its ATPLUG-INF content.
 		 *
 		 * @param toSearch a directory containing class files where we will look for plugin
 		 * implementations
 		 * @param toLinkAgainst the classes that these plugins implementations need
-		 * @return a map from component name to is OSGI-INF string content
+		 * @return a map from component name to is ATPLUG-INF string content
 		 */
 		fun generate(toSearch: List<File>, toLinkAgainst: Set<File>): SortedMap<String, String> {
 			return try {
 				val ext = PlugGeneratorJavaExecable(toSearch, toLinkAgainst)
 				val metadataGen = PlugGenerator(ext.toSearch, ext.toLinkAgainst)
 				// save our results, with no reference to the guts of what happened inside PluginMetadataGen
-				metadataGen.osgiInf
+				metadataGen.atplugInf
 			} catch (e: Exception) {
 				if (rootCause(e) is UnsatisfiedLinkError) {
 					throw RuntimeException(

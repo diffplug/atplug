@@ -28,14 +28,15 @@ class PlugPluginTest : GradleIntegrationHarness() {
 
 		val copy = { str: String ->
 			val src = File("../atplug-runtime/src/test/java/com/diffplug/atplug/$str")
-			setFile("src/main/java/com/diffplug/atplug/$str").toContent(String(Files.readAllBytes(src.toPath()), StandardCharsets.UTF_8))
+			setFile("src/main/java/com/diffplug/atplug/$str")
+					.toContent(String(Files.readAllBytes(src.toPath()), StandardCharsets.UTF_8))
 		}
 		copy("Fruit.kt")
 		copy("Shape.java")
 
 		gradleRunner().withArguments("jar", "--stacktrace").build()
 
-		assertFile("src/main/resources/OSGI-INF/com.diffplug.atplug.Apple.xml")
+		assertFile("src/main/resources/ATPLUG-INF/com.diffplug.atplug.Apple.json")
 				.hasContent(
 						"{\n" +
 								"    \"implementation\": \"com.diffplug.atplug.Apple\",\n" +
@@ -44,7 +45,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 								"        \"id\": \"Apple\"\n" +
 								"    }\n" +
 								"}")
-		assertFile("src/main/resources/OSGI-INF/com.diffplug.atplug.Orange.xml")
+		assertFile("src/main/resources/ATPLUG-INF/com.diffplug.atplug.Orange.json")
 				.hasContent(
 						"{\n" +
 								"    \"implementation\": \"com.diffplug.atplug.Orange\",\n" +
@@ -53,7 +54,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 								"        \"id\": \"Orange\"\n" +
 								"    }\n" +
 								"}")
-		assertFile("src/main/resources/OSGI-INF/com.diffplug.atplug.Shape\$Circle.xml")
+		assertFile("src/main/resources/ATPLUG-INF/com.diffplug.atplug.Shape\$Circle.json")
 				.hasContent(
 						"{\n" +
 								"    \"implementation\": \"com.diffplug.atplug.Shape\$Circle\",\n" +
@@ -65,8 +66,8 @@ class PlugPluginTest : GradleIntegrationHarness() {
 		assertFile("src/main/resources/META-INF/MANIFEST.MF")
 				.hasContentIgnoreWhitespace(
 						"Manifest-Version: 1.0\n" +
-								"Service-Component: OSGI-INF/com.diffplug.atplug.Apple.xml,OSGI-INF/com.d\n" +
-								" iffplug.atplug.Orange.xml,OSGI-INF/com.diffplug.atplug.Shape\$Circle.xml\n" +
-								" ,OSGI-INF/com.diffplug.atplug.Shape\$Square.xml")
+								"AtPlug-Component: ATPLUG-INF/com.diffplug.atplug.Apple.json,ATPLUG-INF/com.d\n" +
+								" iffplug.atplug.Orange.json,ATPLUG-INF/com.diffplug.atplug.Shape\$Circle.json\n" +
+								" ,ATPLUG-INF/com.diffplug.atplug.Shape\$Square.json")
 	}
 }
