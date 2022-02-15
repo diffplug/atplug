@@ -30,7 +30,6 @@ blowdryerSetup {
 }
 
 include 'atplug-runtime'
-include 'atplug-osgi'
 include 'atplug-test-harness'
 include 'atplug-plugin-gradle'
 rootProject.name = 'atplug'

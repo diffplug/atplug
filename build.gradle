@@ -51,21 +51,6 @@ subprojects {
 		tasks.named('test') {
 			dependsOn ':atplug-runtime:jar', ':atplug-runtime:testClasses'
 		}
-	} else if (it.name == 'atplug-osgi') {
-		ext.maven_name = 'AtPlug for OSGi'
-		String VER_DURIAN = '1.2.0'
-		dependencies {
-			implementation "com.diffplug.durian:durian-core:${VER_DURIAN}"
-			implementation "com.diffplug.durian:durian-collect:${VER_DURIAN}"
-			implementation "com.diffplug.durian:durian-io:${VER_DURIAN}"
-		}
-		apply plugin: 'com.diffplug.eclipse.mavencentral'
-		eclipseMavenCentral {
-			release '4.22.0', {
-				constrainTransitivesToThisRelease()
-				api 'org.eclipse.osgi'
-			}
-		}
 	} else {
 		throw new IllegalArgumentException("Unexpected project " + it.name)
 	}
