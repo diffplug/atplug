@@ -34,7 +34,7 @@ import org.gradle.jvm.tasks.Jar;
 
 /**
  * `plugGenerate` task uses `@Plug` to generate files
- * in `src/main/resources/OSGI-INF` as a dependency of
+ * in `src/main/resources/ATPLUG-INF` as a dependency of
  * `processResources`.
  */
 public class PlugPlugin implements Plugin<Project> {
@@ -91,7 +91,7 @@ public class PlugPlugin implements Plugin<Project> {
 
 		@Override
 		public void execute(Task task) {
-			String serviceComponents = PlugGenerateTask.serviceComponents(atplugInfFolder);
+			String serviceComponents = PlugGenerateTask.atplugComponents(atplugInfFolder);
 			Jar jarTask = (Jar) task;
 			if (serviceComponents == null) {
 				jarTask.getManifest().getAttributes().remove(PlugPlugin.SERVICE_COMPONENT);

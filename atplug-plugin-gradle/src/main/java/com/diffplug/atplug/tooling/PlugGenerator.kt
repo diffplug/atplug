@@ -108,7 +108,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	/**
 	 * @param plugClass The class for which we are generating plugin metadata.
 	 * @param socketClass The interface which is the socket for the metadata.
-	 * @return A string containing the content of OSGI-INF as appropriate for clazz.
+	 * @return A string containing the content of ATPLUG-INF as appropriate for clazz.
 	 */
 	private fun <SocketT, PlugT : SocketT> generatePluginTyped(
 			plugClass: Class<PlugT>,
@@ -124,12 +124,12 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 
 	companion object {
 		/**
-		 * Returns a Map from a plugin's name to its OSGI-INF content.
+		 * Returns a Map from a plugin's name to its ATPLUG-INF content.
 		 *
 		 * @param toSearch a directory containing class files where we will look for plugin
 		 * implementations
 		 * @param toLinkAgainst the classes that these plugins implementations need
-		 * @return a map from component name to is OSGI-INF string content
+		 * @return a map from component name to is ATPLUG-INF string content
 		 */
 		fun generate(toSearch: List<File>, toLinkAgainst: Set<File>): SortedMap<String, String> {
 			return try {

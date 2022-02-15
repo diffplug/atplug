@@ -67,7 +67,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 	public PlugGenerateTask() {
 		this.getOutputs().upToDateWhen(unused -> {
 			Manifest manifest = loadManifest();
-			String componentsCmd = serviceComponents();
+			String componentsCmd = atplugComponents();
 			String componentsActual = manifest.getMainAttributes().getValue(PlugPlugin.SERVICE_COMPONENT);
 			return Objects.equals(componentsActual, componentsCmd);
 		});
@@ -125,7 +125,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		// generate the metadata
 		SortedMap<String, String> result = generate();
 
-		// clean out the osgiInf folder, and put the map's content into the folder
+		// clean out the ATPLUG-INF folder, and put the map's content into the folder
 		FileMisc.cleanDir(getAtplugInfFolder());
 		for (Map.Entry<String, String> entry : result.entrySet()) {
 			File serviceFile = new File(getAtplugInfFolder(), entry.getKey() + PlugPlugin.DOT_JSON);
@@ -135,7 +135,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		// the resources directory *needs* the Service-Component entry of the manifest to exist in order for tests to work
 		// so we'll get a manifest (empty if necessary, but preferably we'll load what already exists)
 		Manifest manifest = loadManifest();
-		String componentsCmd = serviceComponents();
+		String componentsCmd = atplugComponents();
 		String componentsActual = manifest.getMainAttributes().getValue(PlugPlugin.SERVICE_COMPONENT);
 		if (Objects.equals(componentsActual, componentsCmd)) {
 			return;
@@ -197,16 +197,16 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		}
 	}
 
-	private String serviceComponents() {
-		return serviceComponents(getAtplugInfFolder());
+	private String atplugComponents() {
+		return atplugComponents(getAtplugInfFolder());
 	}
 
-	static String serviceComponents(File osgiInf) {
-		if (!osgiInf.isDirectory()) {
+	static String atplugComponents(File atplugInf) {
+		if (!atplugInf.isDirectory()) {
 			return null;
 		} else {
 			List<String> serviceComponents = new ArrayList<>();
-			for (File file : FileMisc.list(osgiInf)) {
+			for (File file : FileMisc.list(atplugInf)) {
 				if (file.getName().endsWith(PlugPlugin.DOT_JSON)) {
 					serviceComponents.add(PlugPlugin.ATPLUG_INF + file.getName());
 				}
