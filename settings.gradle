@@ -23,8 +23,8 @@ plugins {
 }
 
 blowdryerSetup {
-	//github 'diffplug/blowdryer-diffplug', 'tag', '5.1.3'
-	devLocal '../blowdryer-diffplug'
+	github 'diffplug/blowdryer-diffplug', 'tag', '5.2.0'
+	//devLocal '../blowdryer-diffplug'
 }
 
 include 'atplug-runtime'
