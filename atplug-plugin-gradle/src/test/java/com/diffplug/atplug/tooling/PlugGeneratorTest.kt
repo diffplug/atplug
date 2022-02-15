@@ -3,9 +3,6 @@ package com.diffplug.atplug.tooling
 import com.diffplug.atplug.tooling.gradle.ResourceHarness
 import java.io.File
 import java.util.*
-import org.gradle.api.attributes.AttributeContainer
-import org.gradle.api.attributes.Bundling
-import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -20,32 +17,15 @@ class PlugGeneratorTest : ResourceHarness() {
 	}
 
 	fun deps(): Set<File> {
-		val atplug_runtime = mutableSetOf(findRuntimeJar())
 		val transitives =
-				listOf(
-						"org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2",
-						"org.jetbrains.kotlin:kotlin-reflect:1.6.10")
-
-		val userHome = File(System.getProperty("user.home"))
-		val project =
-				ProjectBuilder.builder()
-						.withGradleUserHomeDir(File(userHome, ".gradle"))
-						.withProjectDir(rootFolder())
-						.build()
-
-		val deps = transitives.map { project.dependencies.create(it) }.toTypedArray()
-
-		project.repositories.mavenCentral()
-
-		val config = project.configurations.detachedConfiguration(*deps)
-		config.isTransitive = true
-		config.description = "generation deps"
-		config.attributes { attr: AttributeContainer ->
-			attr.attribute(
-					Bundling.BUNDLING_ATTRIBUTE,
-					project.objects.named(Bundling::class.java, Bundling.EXTERNAL))
-		}
-		atplug_runtime.addAll(config.resolve())
+				TestProvisioner.mavenCentral()
+						.provisionWithTransitives(
+								true,
+								listOf(
+										"org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2",
+										"org.jetbrains.kotlin:kotlin-reflect:1.6.10"))
+		val atplug_runtime = mutableSetOf(findRuntimeJar())
+		atplug_runtime.addAll(transitives)
 		return atplug_runtime
 	}
 
