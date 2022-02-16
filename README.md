@@ -28,7 +28,7 @@ output = [
 - a plugin system for the JVM
   - written in pure Kotlin, might port to Kotlin Multiplatform [someday](https://github.com/diffplug/atplug/issues/1).
 - that generates all plugin metadata for you
-  - write Java/Kotlin/Scala code, *never* write error-prone metadata
+  - write Java/Kotlin/Scala code, *never* write error-prone metadata manually
 - lets you filter the available plugins based on their metadata
   - defer classloading to the last possible instant
 - easy mocking for unit tests
@@ -37,8 +37,8 @@ AtPlug has three components:
 
 - a small runtime `com.diffplug.atplug:atplug-runtime`
 - a buildtime step which generates plugin metadata
-  -Gradle plugin: [`com.diffplug.atplug`](https://plugins.gradle.org/plugin/com.diffplug.atplug)
-  -Contributions welcome for maven, etc.
+  - Gradle plugin: [`com.diffplug.atplug`](https://plugins.gradle.org/plugin/com.diffplug.atplug)
+  - Contributions welcome for maven, etc.
 - a harness for mocking in tests `com.diffplug.atplug:atplug-test-harness`
   - built-in support for JUnit5, PRs for other test frameworks welcome
 
@@ -74,7 +74,7 @@ To take advantage of this, we need to an object `Shape.Socket : SocketOwner` whi
 interface Shape {
   object Socket : SocketOwner.SingletonById<Shape>(Shape::class.java) {
     const val KEY_SVG_ICON = "svgIcon"
-    override fun metadata(plug: Fruit) = mapOf(
+    override fun metadata(plug: Shape) = mapOf(
             Pair(KEY_ID, plug.name()),
             Pair(KEY_SVG_ICON, plug.previewSvgIcon()))
   }
