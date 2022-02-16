@@ -10,13 +10,13 @@ class PlugInstanceMap {
 	internal val descriptorMap = mutableMapOf<String, MutableList<PlugDescriptor>>()
 	internal val instanceMap = mutableMapOf<PlugDescriptor, Any>()
 
-	fun put(clazz: String, descriptor: PlugDescriptor) {
+	fun putDescriptor(clazz: String, descriptor: PlugDescriptor) {
 		val descriptors = descriptorMap.computeIfAbsent(clazz) { mutableListOf<PlugDescriptor>() }
 		descriptors.add(descriptor)
 	}
 
-	fun <T> put(clazz: Class<T>, descriptor: PlugDescriptor, instance: T) {
-		put(clazz.name, descriptor)
+	fun <T> putInstance(clazz: Class<T>, descriptor: PlugDescriptor, instance: T) {
+		putDescriptor(clazz.name, descriptor)
 		instanceMap[descriptor] = instance!!
 	}
 

@@ -8,13 +8,12 @@ package com.diffplug.atplug
 
 import java.lang.AutoCloseable
 
-/** Creates a harness for local plugin setup. */
 class PlugHarness {
 	var map = PlugInstanceMap()
 
 	fun <T> add(clazz: Class<T>, instance: T): PlugHarness {
 		val descriptor = SocketOwner.metadataGeneratorFor(clazz).apply(instance)
-		map.put(clazz, PlugDescriptor.fromJson(descriptor), instance)
+		map.putInstance(clazz, PlugDescriptor.fromJson(descriptor), instance)
 		return this
 	}
 
@@ -23,5 +22,6 @@ class PlugHarness {
 		return AutoCloseable { PlugRegistry.setHarness(null) }
 	}
 
+	/** Returns a beforeEach/afterEach plugin for JUnit5. */
 	fun junit5() = com.diffplug.atplug.junit5.AtPlugJUnit5(this)
 }

@@ -74,7 +74,7 @@ interface PlugRegistry {
 									val asString = manifestUrl.toExternalForm()
 									val component = parseComponent(asString, servicePath)
 									synchronized(this) {
-										data.put(component.provides, component)
+										data.putDescriptor(component.provides, component)
 										owners.get(component.provides)?.doRegister(component)
 									}
 								}

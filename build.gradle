@@ -12,7 +12,7 @@ allprojects {
 apply from: 干.file('spotless/freshmark.gradle')
 apply from: 干.file('base/sonatype.gradle')
 
-String VER_JUNIT_JUPITER = '5.0.0'
+String VER_JUNIT_JUPITER = '5.8.2'
 subprojects {
 	apply from: 干.file('base/java8.gradle')
 	apply from: 干.file('base/kotlin.gradle')
@@ -36,7 +36,7 @@ subprojects {
 	} else if (it.name == 'atplug-test-harness') {
 		ext.maven_name='AtPlug test harness'
 		dependencies {
-			compileOnly "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
+			compileOnly "org.junit.jupiter:junit-jupiter-api:5.0.0"
 			implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
 			implementation project(':atplug-runtime')
 		}
