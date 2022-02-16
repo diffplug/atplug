@@ -111,10 +111,10 @@ To use the plugin system, you can do:
 ```kotlin
 Shape.Socket.availableIds(): List<String>
 Shape.Socket.descriptorForId(id: String): PlugDescriptor?
-Shape.Socket.instanceForId(id: String): Shape?
+Shape.Socket.singletonForId(id: String): Shape?
 ```
 
-Which are all built-in to every sublass of `SocketOwner.SingletonById`. You can add more methods too for your usecase.
+Which are all public methods of `SocketOwner.SingletonById`. You can add more methods too for your usecase.
 
 ### (Id vs Descriptor) and (Singleton vs Ephemeral)
 
@@ -124,21 +124,32 @@ The `Socket` is responsible for:
 - maintaining the runtime registry of available plugins
 - instantiating the actual objects from their metadata
 
-When it comes to the registry of available plugins, there are two obvious design points
+When it comes to the registry of available plugins, there are two obvious design points:
 
 - declare some String which functions as a unique id => `Id`
-- parse the `Map<String, String>` into a descriptor class, and run filters against the set of parsed descriptors to get all the plugins which apply to the given situation => `Descriptor`.
+- parse the `Map<String, String>` into a descriptor class, and run filters against the set of parsed descriptors to get all the plugins which apply to a given situation => `Descriptor`.
 
 When it comes to instantiating the actual objects from their metadata, there are again two obvious designs:
 
 - Once a plugin is instantiated, cache it forever and return the same instance each time => `Singleton`
-- Call the plugin constructor each time it is instantiated, so that you may end up with multiple instances of a single plugin => `Ephemeral`
+- Call the plugin constructor each time it is instantiated, so that you may end up with multiple instances of a single plugin, and unused instances can be garbage collected => `Ephemeral`
 
 In most cases, if a plugin has a unique id, then it also makes sense to treat that plugin as a global singleton => `SocketOwner.SingletonById`. Likewise, if plugins do not have unique ids, then their concept of identity probably doesn't matter so there's no need to cache them as singletons => `SocketOwner.EphemeralByDescriptor`.
 
-Those two classes, `SingletonById` and `EphemeralByDescriptor`, are the only two options we provide out of the box - we did not fill the full 2x2 matrix. For every case we have encountered, we can easily extend one or the other and get exactly what we need.
+Those two classes, `SingletonById` and `EphemeralByDescriptor`, are the only two options we provide out of the box - we did not fill the full 2x2 matrix (no `SingletonByDescriptor` or `EphemeralById`) because we have not found a need anywhere in our codebase for the other cases. You are free to implement `SocketOwner` yourself from scratch if you want a different design point.
 
-But you are free to implement `SocketOwner` yourself from scratch if you want a different design point.
+The public methods of `SingletonById` are just above this section. `EphemeralByDescriptor` doesn't have any public methods, only protected methods which you can use to build an API appropriate to your case.
+
+```kotlin
+abstract class EphemeralByDescriptor<T, ParsedDescriptor> {
+  protected abstract fun parse(plugDescriptor: PlugDescriptor): ParsedDescriptor
+  protected fun <R> computeAgainstDescriptors(compute: Function<Set<ParsedDescriptor>, R>) : R
+  protected fun <R> forEachDescriptor(forEach: Consumer<ParsedDescriptor>)
+  protected fun descriptorsFor(predicate: Predicate<ParsedDescriptor>): List<ParsedDescriptor>
+  protected fun instantiateFor(predicate: Predicate<ParsedDescriptor>): List<T>
+  protected fun instantiateFirst(predicateDescriptor: Predicate<ParsedDescriptor>, order: Comparator<ParsedDescriptor>, predicateInstance: Predicate<T>): T?
+}
+```
 
 ### Working from Java
 

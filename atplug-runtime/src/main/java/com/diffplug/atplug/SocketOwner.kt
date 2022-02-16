@@ -10,6 +10,7 @@ import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.lang.reflect.Modifier
+import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 
@@ -50,7 +51,15 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 
 		protected abstract fun parse(plugDescriptor: PlugDescriptor): ParsedDescriptor
 
-		protected fun availableDescriptors() = descriptors.keys
+		protected fun <R> computeAgainstDescriptors(compute: Function<Set<ParsedDescriptor>, R>): R {
+			synchronized(this) {
+				return compute.apply(descriptors.keys)
+			}
+		}
+
+		protected fun <R> forEachDescriptor(forEach: Consumer<ParsedDescriptor>) {
+			synchronized(this) { descriptors.keys.forEach(forEach) }
+		}
 
 		protected fun descriptorsFor(predicate: Predicate<ParsedDescriptor>): List<ParsedDescriptor> {
 			synchronized(this) {
@@ -58,7 +67,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
-		protected fun instancesFor(predicate: Predicate<ParsedDescriptor>): List<T> {
+		protected fun instantiateFor(predicate: Predicate<ParsedDescriptor>): List<T> {
 			val result = mutableListOf<T>()
 			synchronized(this) {
 				descriptors.forEach { (parsed, descriptor) ->
@@ -68,6 +77,21 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 				}
 			}
 			return result
+		}
+
+		protected fun instantiateFirst(
+				predicateDescriptor: Predicate<ParsedDescriptor>,
+				order: Comparator<ParsedDescriptor>,
+				predicateInstance: Predicate<T>
+		): T? {
+			synchronized(this) {
+				return descriptors
+						.keys
+						.filter { predicateDescriptor.test(it) }
+						.sortedWith(order)
+						.map { instantiatePlug(descriptors[it]!!) }
+						.firstOrNull { predicateInstance.test(it) }
+			}
 		}
 
 		override fun register(plugDescriptor: PlugDescriptor) {
@@ -98,7 +122,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 
 	abstract class SingletonById<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
-		private val instanceById = mutableMapOf<String, T>()
+		private val singletonById = mutableMapOf<String, T>()
 		init {
 			PlugRegistry.registerSocket(socketClass, this)
 		}
@@ -119,7 +143,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 				val id = plugDescriptor.properties[KEY_ID]!!
 				val removed = descriptorById.remove(id)
 				assert(removed != null)
-				instanceById.remove(id)
+				singletonById.remove(id)
 				removeHook(plugDescriptor)
 			}
 		}
@@ -141,10 +165,10 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
-		fun instanceForId(id: String): T? {
+		fun singletonForId(id: String): T? {
 			synchronized(this) {
 				return try {
-					instanceById.computeIfAbsent(id) { instantiatePlug(descriptorById[it]!!) }
+					singletonById.computeIfAbsent(id) { instantiatePlug(descriptorById[it]!!) }
 				} catch (e: NullPointerException) {
 					null
 				}
