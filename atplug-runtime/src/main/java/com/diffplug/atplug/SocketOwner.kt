@@ -10,7 +10,6 @@ import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.lang.reflect.Modifier
-import java.util.*
 import java.util.function.Function
 import java.util.function.Predicate
 
@@ -49,19 +48,17 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 		override fun instantiatePlug(plugDescriptor: PlugDescriptor): T =
 				PlugRegistry.instantiatePlug(socketClass, plugDescriptor)
 
-		abstract protected fun parse(plugDescriptor: PlugDescriptor): ParsedDescriptor
+		protected abstract fun parse(plugDescriptor: PlugDescriptor): ParsedDescriptor
 
-		protected fun all() = descriptors.keys
+		protected fun availableDescriptors() = descriptors.keys
 
-		protected fun descriptorFiltered(
-				predicate: Predicate<ParsedDescriptor>
-		): List<ParsedDescriptor> {
+		protected fun descriptorsFor(predicate: Predicate<ParsedDescriptor>): List<ParsedDescriptor> {
 			synchronized(this) {
 				return descriptors.keys.filter { predicate.test(it) }
 			}
 		}
 
-		protected fun instantiateFiltered(predicate: Predicate<ParsedDescriptor>): List<T> {
+		protected fun instancesFor(predicate: Predicate<ParsedDescriptor>): List<T> {
 			val result = mutableListOf<T>()
 			synchronized(this) {
 				descriptors.forEach { (parsed, descriptor) ->
@@ -93,12 +90,13 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
+		/** If you override this, make sure you also override [removeHook] */
 		open fun registerHook(plugDescriptor: PlugDescriptor) {}
 
 		open fun removeHook(plugDescriptor: PlugDescriptor) {}
 	}
 
-	abstract open class SingletonById<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
+	abstract class SingletonById<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
 		private val instanceById = mutableMapOf<String, T>()
 		init {
@@ -108,7 +106,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 		override fun instantiatePlug(plugDescriptor: PlugDescriptor): T =
 				PlugRegistry.instantiatePlug(socketClass, plugDescriptor)
 
-		override final fun register(plugDescriptor: PlugDescriptor) {
+		final override fun register(plugDescriptor: PlugDescriptor) {
 			synchronized(this) {
 				val id = plugDescriptor.properties[KEY_ID]!!
 				descriptorById[id] = plugDescriptor
@@ -116,7 +114,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
-		override final fun remove(plugDescriptor: PlugDescriptor) {
+		final override fun remove(plugDescriptor: PlugDescriptor) {
 			synchronized(this) {
 				val id = plugDescriptor.properties[KEY_ID]!!
 				val removed = descriptorById.remove(id)
@@ -126,25 +124,30 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
-		open protected fun registerHook(plugDescriptor: PlugDescriptor) {}
+		/** If you override this, make sure you also override [removeHook] */
+		protected open fun registerHook(plugDescriptor: PlugDescriptor) {}
 
-		open protected fun removeHook(plugDescriptor: PlugDescriptor) {}
+		protected open fun removeHook(plugDescriptor: PlugDescriptor) {}
 
-		fun allIds() = Collections.unmodifiableSet(descriptorById.keys)
-
-		fun forId(id: String): T? {
+		fun availableIds(): List<String> {
 			synchronized(this) {
-				try {
-					return instanceById.computeIfAbsent(id) { instantiatePlug(descriptorById[it]!!) }
-				} catch (e: NullPointerException) {
-					return null
-				}
+				return descriptorById.keys.toList()
 			}
 		}
 
 		fun descriptorForId(id: String): PlugDescriptor? {
 			synchronized(this) {
 				return descriptorById[id]
+			}
+		}
+
+		fun instanceForId(id: String): T? {
+			synchronized(this) {
+				return try {
+					instanceById.computeIfAbsent(id) { instantiatePlug(descriptorById[it]!!) }
+				} catch (e: NullPointerException) {
+					null
+				}
 			}
 		}
 	}
@@ -155,7 +158,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 		fun <T> metadataGeneratorFor(socketClass: Class<T>): Function<T, String> {
 			var firstAttempt: Throwable? = null
 			try {
-				val socketField = socketClass.getDeclaredField("socket")!!
+				val socketField = socketClass.getDeclaredField("socket")
 				if (Modifier.isStatic(socketField.modifiers) && Modifier.isFinal(socketField.modifiers)) {
 					val socket = socketField[null] as SocketOwner<T>
 					return generatorForSocket(socket)

@@ -109,9 +109,9 @@ And the manifest of the Jar file will have a field `AtPlug-Component` which poin
 To use the plugin system, you can do:
 
 ```kotlin
-Shape.Socket.allIds(): Set<String>
+Shape.Socket.availableIds(): List<String>
 Shape.Socket.descriptorForId(id: String): PlugDescriptor?
-Shape.Socket.forId(id: String): Shape?
+Shape.Socket.instanceForId(id: String): Shape?
 ```
 
 Which are all built-in to every sublass of `SocketOwner.SingletonById`. You can add more methods too for your usecase.
