@@ -26,145 +26,141 @@ output = [
 ## AtPlug is...
 
 - a plugin system for the JVM
-- that generates all OSGi metadata for you - write Java code, not error-prone metadata
-- that runs with or without OSGi
-  + No need for OSGi in small systems (e.g. unit tests)
-  + Take full advantage of OSGi's power in large systems
+  - written in pure Kotlin, might port to Kotlin Multiplatform [someday](https://github.com/diffplug/atplug/issues/1).
+- that generates all plugin metadata for you
+  - write Java/Kotlin/Scala code, *never* write error-prone metadata
+- lets you filter the available plugins based on their metadata
+  - defer classloading to the last possible instant
+- easy mocking for unit tests
 
-AtPlug has two components:
+AtPlug has three components:
 
-- a small runtime (less than 1000 lines) which allows seamless operation inside and outside of OSGi
-- a buildtime step which generates OSGi declarative service metadata
-  + Gradle plugin: [`com.diffplug.gradle.atplug`](https://plugins.gradle.org/plugin/com.diffplug.gradle.atplug)
-  + Contributions welcome for maven, ant, etc.
+- a small runtime `com.diffplug.atplug:atplug-runtime`
+- a buildtime step which generates plugin metadata
+  + Gradle plugin: [`com.diffplug.atplug`](https://plugins.gradle.org/plugin/com.diffplug.atplug)
+  + Contributions welcome for maven, etc.
+- a small harness for unit test mocking `com.diffplug.atplug:atplug-test-harness`
 
-It is currently in production usage at [DiffPlug](https://www.diffplug.com); extracting it into an opensource project is a WIP.
+It is in production usage at [DiffPlug](https://www.diffplug.com).
 
 ## How it works
 
-Let's say you're building a filesystem explorer, and you'd like to present a plugin interface for adding items to the right click menu.  The socket interface might look something like this:
+Let's say you're building a drawing application, and you want a plugin system to allow users to contribute different shapes. The socket interface might look something like this:
 
-```java
-public interface FileMenu {
-  /** Adds the appropriate entries for the given list of files. */
-  void addRightClick(Menu root, List<File> files);
+```kotlin
+interface Shape {
+  fun draw(g: Graphics)
 }
 ```
 
-Let's say our system has 100 different `FileMenu` plugins.  Loading all 100 plugins will take a long time, so we'd like to describe which files a given `FileMenu` applies to without having to actually load it.  One way would be if each `FileMenu` declared which file extensions it is applicable to.
+Let's say our system has 100 different `Shape` plugins.  Loading all 100 plugins will take a long time, so we'd like to describe which shapes are available without having to actually load it.
 
 We can accomplish this in AtPlug by adding a method to the socket interface marked with `@Metadata`.  The annotation is a documentation hint that this method should return a constant value which will be used to generate static metadata about the plugin.
 
-```java
-public interface FileMenu {
-  /** Extensions for which this FileMenu applies (empty set means it applies to all extensions). */
-  @Metadata default Set<String> extensions() {
-    return Collections.emptySet();
-  }
-
-  /** Adds the appropriate entries for the given list of files. */
-  void addRightClick(Menu root, List<File> files);
+```kotlin
+interface Shape {
+  @Metadata fun name(): String
+  @Metadata fun previewSvgIcon(): String
+  fun draw(g: Graphics)
 }
 ```
 
-The OSGi runtime (and AtPlug's non-OSGi compatibility layer) can store metadata about a plugin in a `Map<String, String>` which gets saved into a metadata file.  This is the mechanism which allows us to inspect all the `FileMenu` plugins in the system without loading their classes.
+The AtPlug runtime stores metadata about a plugin in a `Map<String, String>` which gets saved into a metadata file.  This is the mechanism which allows us to inspect all the `Shape` plugins in the system without loading their classes.
 
-To take advantage of this, we need to declare a class `FileMenu.MetadataCreator extends `[`DeclarativeMetadataCreator<FileMenu>`](TODO-javadoc), which will take a `FileMenu` instance and return a `Map<String, String>` (a.k.a. `Function<FileMenu, Map<String, String>>`).  This will be used during the build step to generate OSGi metadata files.
+To take advantage of this, we need to an object `Shape.Socket : SocketOwner` which will take a `Shape` instance and return a `Map<String, String>`.  This will be used during the build step to generate AtPlug metadata files.
 
-In order to read this metadata at runtime, we also need to declare a class `FileMenu.Descriptor extends `[`ServiceDescriptor<FileMenu>`](TODO-javadoc) which will parse the `Map<String, String>` into a convenient form for determining which plugins to load.
-
-In the case of our `FileMenu` socket, implementing `MetadataCreator` and `Descriptor` mostly boils down to turning a `Set<String>` of extensions into a `Map<String, String>`.  There are lots of ways to do this, but the clearest is probably to turn the set `[doc, docx]` into the map `extensions=doc,docx`, where we encode the set using a single comma-delimited string.  This way if we decide later to add other metadata like `int minFiles()` or `int maxFiles()`, then we can trivially update the metadata map to `extensions=doc,docx minFiles=1 maxFiles=1`.  The project `[durian-parse](TODO-link)` has a variety of useful converters for going back and forth between simple data structures and raw strings.
-
-Here's how we might implement our FileMenu.MetadataCreator and FileMenu.Descriptor.
-
-```java
-public interface FileMenu {
-  ...
-  /** Generates metadata from an instance of FileMenu (implementation detail). */
-  static class MetadataCreator extends DeclarativeMetadataCreator<FileMenu> {
-    private static final String KEY_EXTENSIONS = "extensions";
-
-    public MetadataCreator() {
-      super(FileMenu.class, instance -> ImmutableMap.of(KEY_EXTENSIONS, Converters.forSet().convert(instance.fsPrefixes()));
-    }
-  }
-
-  /**
-  * Parses a descriptor of a FileMenu from its metadata.
-  * Public API for exploring the registry of available plugins.
-  */
-  public static final class Descriptor extends ServiceDescriptor<FileMenu> {
-    final Set<String> extensions;
-
-    private Descriptor(ServiceReference<FileMenu> ref) {
-      super(ref);
-      this.extensions = Converters.forSet().reverse().convert(getString(MetadataCreator.KEY_EXTENSIONS));
-    }
-
-    private boolean appliesTo(List<Filder> files) {
-      return extensions.stream().allMatch(extension -> {
-        return files.stream().allMatch(file -> file.getName().endsWith(extension));
-      });
-    }
-
-    /** Returns descriptors for all RightClickFiles which apply to the given list of files. */
-    public static Stream<Descriptor> getFor(List<Filder> files) {
-      return ServiceDescriptor.getServices(FileMenu.class, Descriptor::new).filter(d -> d.appliesTo(files));
-    }
+```kotlin
+interface Shape {
+  object Socket : SocketOwner.SingletonById<Shape>(Shape::class.java) {
+    const val KEY_SVG_ICON = "svgIcon"
+    override fun metadata(plug: Fruit) = mapOf(
+            Pair(KEY_ID, plug.name()),
+            Pair(KEY_SVG_ICON, plug.previewSvgIcon()))
   }
 }
 ```
 
-Now, when we want to implement a right-click menu, all we have to do is mark it with the `@Plug` annotation so that the build step can find it.
+Now your users can declare an instance of `Shape` and annotate it with `@Plug(Shape.class)`.
 
-```java
-@Plug
-public class DocxFileMenu implements FileMenu {
-  /** Extensions for which this FileMenu applies (empty set means it applies to all extensions). */
-  @Override public Set<String> extensions() {
-    return ImmutableSet.of("doc", "docx");
-  }
+```kotlin
+@Plug(Shape::class)
+class Circle : Shape {
+  override fun name() = "Circle"
+  override fun previewSvgIcon() = "icons/circle.svg"
+  override fun draw(g: Graphics) = g.drawCircle()
+}
+```
 
-  /** Adds the appropriate entries for the given list of files. */
-  @Override public void addRightClick(Menu root, List<File> files) {
-    // do stuff
+Now when you run `./gradlew jar`, you will have a resource file called `ATPLUG-INF/com.package.Circle.json` with content like this:
+
+```json
+{ "implementation": "com.package.Circle",
+  "provides": "com.api.Shape",
+  "properties": {
+    "id": "Circle",
+    "svgIcon": "icons/circle.svg"
   }
 }
 ```
 
-When we run `gradlew generateOsgiMetadata` (which will run automatically whenever it is needed), AtPlug's build step will generate these files for us:
+And the manifest of the Jar file will have a field `AtPlug-Component` which points to all the json files in the `ATPLUG-INF` directory. You never have to edit these files, but there's no magic. The `metadata` function which you wrote for the socket generates all the json files.
 
-```
---- OSGI-INF/com.diffplug.talks.socketsandplugs.DocxFileMenu.xml ---
-<component name="com.diffplug.talks.socketsandplugs.DocxFileMenu">
-  <implementation class="com.diffplug.talks.socketsandplugs.DocxFileMenu"></implementation>
-  <service>
-    <provide interface="com.diffplug.talks.socketsandplugs.FileMenu"></provide>
-  </service>
-  <property name="extensions" type="String" value="doc,docx"></property>
-</component>
+To use the plugin system, you can do:
 
---- META-INF/MANIFEST.MF ---
-Service-Component: OSGI-INF/com.diffplug.talks.socketsandplugs.DocxFileMenu.xml
+```kotlin
+Shape.Socket.allIds(): Set<String>
+Shape.Socket.descriptorForId(id: String): PlugDescriptor?
+Shape.Socket.forId(id: String): Shape?
 ```
 
-AtPlug ensures that you'll never have to edit these files by hand, but there's no magic.  You write the function that generates the metadata (MetadataCreator) and you write the function that parses the metadata (Descriptor).  AtPlug just does all the plumbing and grunt work for you.
+Which are all built-in to every sublass of `SocketOwner.SingletonById`. You can add more methods too for your usecase.
 
-To use the plugin system, all you have to do is:
+### (Id vs Descriptor) and (Singleton vs Ephemeral)
+
+The `Socket` is responsible for:
+
+- generating metadata (at buildtime)
+- maintaining the runtime registry of available plugins
+- instantiating the actual objects from their metadata
+
+When it comes to the registry of available plugins, there are two obvious design points
+
+- declare some String which functions as a unique id => `Id`
+- parse the `Map<String, String>` into a descriptor class, and run filters against the set of parsed descriptors to get all the plugins which apply to the given situation => `Descriptor`.
+
+When it comes to instantiating the actual objects from their metadata, there are again two obvious designs:
+
+- Once a plugin is instantiated, cache it forever and return the same instance each time => `Singleton`
+- Call the plugin constructor each time it is instantiated, so that you may end up with multiple instances of a single plugin => `Ephemeral`
+
+In most cases, if a plugin has a unique id, then it also makes sense to treat that plugin as a global singleton => `SocketOwner.SingletonById`. Likewise, if plugins do not have unique ids, then their concept of identity probably doesn't matter so there's no need to cache them as singletons => `SocketOwner.EphemeralByDescriptor`.
+
+Those two classes, `SingletonById` and `EphemeralByDescriptor`, are the only two options we provide out of the box - we did not fill the full 2x2 matrix. For every case we have encountered, we can easily extend one or the other and get exactly what we need.
+
+But you are free to implement `SocketOwner` yourself from scratch if you want a different design point.
+
+### Working from Java
+
+The examples above are Kotlin, but you can also use Java. To declare the socket, just have a field `static final SocketOwner socket`, as shown below:
 
 ```java
-Menu root = new Menu();
-List<File> files = Arrays.asList(new File("Budget.docx"));
-for (FileMenu.Descriptor descriptor : FileMenu.Descriptor.getFor(files)) {
-  descriptor.openManaged(instance -> {
-    instance.addRightClick(root, files);
-  });
+public interface Shape {
+  public static final SocketOwner.Id<Shape> socket = new SocketOwner.SingletonId<Shape>(Shape.class) {
+    @Override
+    public Map<String, String> metadata(Shape plug) {
+      Map<String, String> map = new HashMap<>();
+      map.put(KEY_ID, plug.name());
+      return map;
+    }
+  };
 }
 ```
+
+Sockets don't have to be interfaces - abstract classes or even concrete classes would work fine too.
 
 ## Requirements
 
-Nothing so far...
+Java 8+.
 
 ## Acknowledgements
 
