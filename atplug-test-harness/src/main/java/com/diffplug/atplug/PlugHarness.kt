@@ -7,12 +7,9 @@
 package com.diffplug.atplug
 
 import java.lang.AutoCloseable
-import org.junit.jupiter.api.extension.AfterEachCallback
-import org.junit.jupiter.api.extension.BeforeEachCallback
-import org.junit.jupiter.api.extension.ExtensionContext
 
 /** Creates a harness for local plugin setup. */
-class PlugHarness : BeforeEachCallback, AfterEachCallback {
+class PlugHarness {
 	var map = PlugInstanceMap()
 
 	fun <T> add(clazz: Class<T>, instance: T): PlugHarness {
@@ -26,22 +23,5 @@ class PlugHarness : BeforeEachCallback, AfterEachCallback {
 		return AutoCloseable { PlugRegistry.setHarness(null) }
 	}
 
-	private var openHarness: AutoCloseable? = null
-
-	override fun beforeEach(context: ExtensionContext) {
-		assert(openHarness == null)
-		openHarness = start()
-	}
-
-	override fun afterEach(context: ExtensionContext) {
-		openHarness!!.close()
-		openHarness = null
-	}
-
-	companion object {
-		@JvmStatic
-		fun create(): PlugHarness {
-			return PlugHarness()
-		}
-	}
+	fun junit5beforeAfterEach() = AtPlugJUnit5(this)
 }
