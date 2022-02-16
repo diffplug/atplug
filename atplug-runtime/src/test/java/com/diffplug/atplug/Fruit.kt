@@ -3,7 +3,7 @@ package com.diffplug.atplug
 interface Fruit {
 	@Metadata fun name(): String
 
-	object Socket : SocketOwner.Id<Fruit>(Fruit::class.java) {
+	object Socket : SocketOwner.SingletonById<Fruit>(Fruit::class.java) {
 		override fun metadata(plug: Fruit) = mapOf(Pair(KEY_ID, plug.name()))
 	}
 }

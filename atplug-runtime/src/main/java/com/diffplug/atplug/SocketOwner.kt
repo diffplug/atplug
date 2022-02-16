@@ -21,9 +21,9 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			PlugDescriptor(plug!!::class.java.name, socketClass.name, metadata(plug)).toJson()
 
 	/**
-	 * Instantiates the given plug. Already implemented by the default implementations [Id] and
-	 * [Complex]. If you implement this yourself, make sure that you call [PlugRegistry.register] in
-	 * your constructor.
+	 * Instantiates the given plug. Already implemented by the default implementations [SingletonById]
+	 * and [EphemeralByDescriptor]. If you implement this yourself, make sure that you call
+	 * [PlugRegistry.register] in your constructor.
 	 */
 	protected abstract fun instantiatePlug(plugDescriptor: PlugDescriptor): T
 
@@ -39,7 +39,8 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 
 	protected abstract fun remove(plugDescriptor: PlugDescriptor)
 
-	abstract class Complex<T, ParsedDescriptor>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
+	abstract class EphemeralByDescriptor<T, ParsedDescriptor>(socketClass: Class<T>) :
+			SocketOwner<T>(socketClass) {
 		private val descriptors = mutableMapOf<ParsedDescriptor, PlugDescriptor>()
 		init {
 			PlugRegistry.register(socketClass, this)
@@ -97,7 +98,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 		open fun removeHook(plugDescriptor: PlugDescriptor) {}
 	}
 
-	abstract open class Id<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
+	abstract open class SingletonById<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
 		private val instanceById = mutableMapOf<String, T>()
 		init {
@@ -125,9 +126,9 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
-		open fun registerHook(plugDescriptor: PlugDescriptor) {}
+		open protected fun registerHook(plugDescriptor: PlugDescriptor) {}
 
-		open fun removeHook(plugDescriptor: PlugDescriptor) {}
+		open protected fun removeHook(plugDescriptor: PlugDescriptor) {}
 
 		fun allIds() = Collections.unmodifiableSet(descriptorById.keys)
 

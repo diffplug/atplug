@@ -23,7 +23,7 @@ public interface Shape {
 	@Metadata
 	String name();
 
-	SocketOwner.Id<Shape> socket = new SocketOwner.Id<Shape>(Shape.class) {
+	SocketOwner.SingletonById<Shape> socket = new SocketOwner.SingletonById<Shape>(Shape.class) {
 		@Override
 		public Map<String, String> metadata(Shape plug) {
 			Map<String, String> map = new HashMap<>();
