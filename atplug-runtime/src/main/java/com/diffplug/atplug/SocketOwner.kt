@@ -23,7 +23,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	/**
 	 * Instantiates the given plug. Already implemented by the default implementations [SingletonById]
 	 * and [EphemeralByDescriptor]. If you implement this yourself, make sure that you call
-	 * [PlugRegistry.register] in your constructor.
+	 * [PlugRegistry.registerSocket] in your constructor.
 	 */
 	protected abstract fun instantiatePlug(plugDescriptor: PlugDescriptor): T
 
@@ -43,7 +43,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			SocketOwner<T>(socketClass) {
 		private val descriptors = mutableMapOf<ParsedDescriptor, PlugDescriptor>()
 		init {
-			PlugRegistry.register(socketClass, this)
+			PlugRegistry.registerSocket(socketClass, this)
 		}
 
 		override fun instantiatePlug(plugDescriptor: PlugDescriptor): T =
@@ -102,7 +102,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
 		private val instanceById = mutableMapOf<String, T>()
 		init {
-			PlugRegistry.register(socketClass, this)
+			PlugRegistry.registerSocket(socketClass, this)
 		}
 
 		override fun instantiatePlug(plugDescriptor: PlugDescriptor): T =

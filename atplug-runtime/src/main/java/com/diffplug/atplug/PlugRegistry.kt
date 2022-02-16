@@ -14,15 +14,15 @@ import java.util.*
 import java.util.jar.Manifest
 
 interface PlugRegistry {
-	fun <T> register(socketClass: Class<T>, socketOwner: SocketOwner<T>)
+	fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>)
 
 	fun <T> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T
 
 	companion object {
 		private val instance: Lazy<PlugRegistry> = lazy { Eager() }
 
-		internal fun <T> register(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
-			instance.value.register(socketClass, socketOwner)
+		internal fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
+			instance.value.registerSocket(socketClass, socketOwner)
 		}
 
 		internal fun <T> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T {
@@ -85,7 +85,7 @@ interface PlugRegistry {
 			}
 		}
 
-		override fun <T> register(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
+		override fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
 			synchronized(this) {
 				val prevOwner = owners.put(socketClass.name, socketOwner)
 				assert(prevOwner == null) { "Multiple owners registered for ${socketClass}" }
