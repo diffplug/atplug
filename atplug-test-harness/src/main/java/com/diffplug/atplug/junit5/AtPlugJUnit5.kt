@@ -1,5 +1,6 @@
-package com.diffplug.atplug
+package com.diffplug.atplug.junit5
 
+import com.diffplug.atplug.PlugHarness
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext

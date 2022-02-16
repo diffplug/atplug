@@ -23,5 +23,5 @@ class PlugHarness {
 		return AutoCloseable { PlugRegistry.setHarness(null) }
 	}
 
-	fun junit5beforeAfterEach() = AtPlugJUnit5(this)
+	fun junit5() = com.diffplug.atplug.junit5.AtPlugJUnit5(this)
 }
