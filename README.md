@@ -37,9 +37,10 @@ AtPlug has three components:
 
 - a small runtime `com.diffplug.atplug:atplug-runtime`
 - a buildtime step which generates plugin metadata
-  + Gradle plugin: [`com.diffplug.atplug`](https://plugins.gradle.org/plugin/com.diffplug.atplug)
-  + Contributions welcome for maven, etc.
-- a small harness for unit test mocking `com.diffplug.atplug:atplug-test-harness`
+  -Gradle plugin: [`com.diffplug.atplug`](https://plugins.gradle.org/plugin/com.diffplug.atplug)
+  -Contributions welcome for maven, etc.
+- a harness for mocking in tests `com.diffplug.atplug:atplug-test-harness`
+  - built-in support for JUnit5, PRs for other test frameworks welcome
 
 It is in production usage at [DiffPlug](https://www.diffplug.com).
 
