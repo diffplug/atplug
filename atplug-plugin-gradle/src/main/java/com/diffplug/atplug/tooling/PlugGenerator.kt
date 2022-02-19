@@ -75,7 +75,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 			}
 		} finally {
 			classLoader.close()
-			System.setProperty("atplug.generate", null)
+			System.setProperty("atplug.generate", "")
 		}
 	}
 
