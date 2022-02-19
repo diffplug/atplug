@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+
+## [0.1.1] - 2022-02-19
 ### Fixed
 - The Gradle daemon would throw `ZipException` during the second invocation of metadata generation, now fixed.
 
