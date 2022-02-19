@@ -12,6 +12,7 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.jar.Manifest
+import java.util.zip.ZipException
 
 interface PlugRegistry {
 	fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>)
@@ -70,12 +71,26 @@ interface PlugRegistry {
 							for (service in
 									services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
 								val servicePath = service.trim { it <= ' ' }
-								if (servicePath.isNotEmpty()) {
-									val asString = manifestUrl.toExternalForm()
-									val component = parseComponent(asString, servicePath)
-									synchronized(this) {
-										data.putDescriptor(component.provides, component)
-										owners.get(component.provides)?.doRegister(component)
+								try {
+									if (servicePath.isNotEmpty()) {
+										val asString = manifestUrl.toExternalForm()
+										val component = parseComponent(asString, servicePath)
+										synchronized(this) {
+											data.putDescriptor(component.provides, component)
+											owners.get(component.provides)?.doRegister(component)
+										}
+									}
+								} catch (e: ZipException) {
+									// When a JVM loads a jar, it mmaps the jar. If that jar changes
+									// (as it does when generating plugin metadata in a Gradle daemon)
+									// then you get ZipException after the change. The accuracy of the
+									// registry is irrelevant during metadata generation - the registry
+									// exists during metadata generation only because the `SocketOwner`s
+									// register themselves in their constructors. Therefore, it is safe to
+									// ignore these errors during metadata generation.
+									val prop = System.getProperty("atplug.generate")
+									if (prop != "true") {
+										throw e
 									}
 								}
 							}
