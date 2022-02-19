@@ -170,6 +170,10 @@ public interface Shape {
 
 Sockets don't have to be interfaces - abstract classes or even concrete classes would work fine too.
 
+### OSGi compatibility
+
+This project used to be called "AutOSGi", and rather than generating `.json` it generated metadata compatible with OSGi Declarative Services. We found that OSGi caused more trouble than it was worth, and ended up removing it. However, it would be pretty easy to add it back in, see the [`graveyard/osgi` tag](https://github.com/diffplug/atplug/releases/tag/graveyard%2Fosgi) to get back to the OSGi version. Happy to merge a PR which optionally puts this functionality back in.
+
 ## Requirements
 
 Java 8+.
