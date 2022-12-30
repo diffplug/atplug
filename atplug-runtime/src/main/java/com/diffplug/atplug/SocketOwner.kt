@@ -6,6 +6,7 @@
  */
 package com.diffplug.atplug
 
+import java.io.EOFException
 import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
@@ -188,6 +189,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 					return generatorForSocket(socket)
 				}
 			} catch (e: Throwable) {
+				rethrowIfEOF(e)
 				firstAttempt = e
 			}
 			try {
@@ -195,12 +197,19 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 				val socket = socketOwnerClass.objectInstance!! as SocketOwner<T>
 				return generatorForSocket(socket)
 			} catch (secondAttempt: Throwable) {
+				rethrowIfEOF(secondAttempt)
 				val e =
 						IllegalArgumentException(
 								"To create metadata for `$socketClass` we need either a field `static final SocketOwner socket` or a kotlin `object Socket`.",
 								secondAttempt)
 				firstAttempt?.let(e::addSuppressed)
 				throw e
+			}
+		}
+
+		private fun rethrowIfEOF(exception: Throwable) {
+			if (rootCause(exception) is EOFException) {
+				throw Error("The JVM needs to be restarted (gradew --stop) to fix", exception)
 			}
 		}
 
