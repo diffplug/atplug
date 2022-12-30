@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream
 import java.lang.reflect.Constructor
 import java.net.URL
 import java.nio.charset.StandardCharsets
-import java.util.*
 import java.util.jar.Manifest
 import java.util.zip.ZipException
 
@@ -33,16 +32,6 @@ interface PlugRegistry {
 		private const val PATH_MANIFEST = "META-INF/MANIFEST.MF"
 		private const val DS_WITHIN_MANIFEST = "AtPlug-Component"
 
-		internal fun parseComponent(manifestUrl: String, servicePath: String): PlugDescriptor {
-			val serviceUrl =
-					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
-
-			val out = ByteArrayOutputStream()
-			serviceUrl.openStream().use { it.copyTo(out) }
-			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
-			return PlugDescriptor.fromJson(serviceFileContent)
-		}
-
 		fun setHarness(data: PlugInstanceMap?) {
 			val registry = instance.value
 			if (registry is Eager) {
@@ -62,42 +51,56 @@ interface PlugRegistry {
 				val values = Eager::class.java.classLoader.getResources(PATH_MANIFEST)
 				while (values.hasMoreElements()) {
 					val manifestUrl = values.nextElement()
-					manifestUrl.openStream().use { stream ->
-						// parse the manifest
-						val manifest = Manifest(stream)
-						val services = manifest.mainAttributes.getValue(DS_WITHIN_MANIFEST)
-						if (services != null) {
-							// it's got declarative services!
-							for (service in
-									services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
-								val servicePath = service.trim { it <= ' ' }
-								try {
-									if (servicePath.isNotEmpty()) {
-										val asString = manifestUrl.toExternalForm()
-										val component = parseComponent(asString, servicePath)
-										synchronized(this) {
-											data.putDescriptor(component.provides, component)
-											owners[component.provides]?.doRegister(component)
-										}
-									}
-								} catch (e: ZipException) {
-									// When a JVM loads a jar, it mmaps the jar. If that jar changes
-									// (as it does when generating plugin metadata in a Gradle daemon)
-									// then you get ZipException after the change. The accuracy of the
-									// registry is irrelevant during metadata generation - the registry
-									// exists during metadata generation only because the `SocketOwner`s
-									// register themselves in their constructors. Therefore, it is safe to
-									// ignore these errors during metadata generation.
-									val prop = System.getProperty("atplug.generate")
-									if (prop != "true") {
-										throw e
-									}
+					parseManifest(manifestUrl)
+				}
+			}
+		}
+
+		private fun parseManifest(manifestUrl: URL) {
+			manifestUrl.openStream().use { stream ->
+				// parse the manifest
+				val manifest = Manifest(stream)
+				val services = manifest.mainAttributes.getValue(DS_WITHIN_MANIFEST)
+				if (services != null) {
+					// it's got declarative services!
+					for (service in
+							services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
+						val servicePath = service.trim { it <= ' ' }
+						try {
+							if (servicePath.isNotEmpty()) {
+								val asString = manifestUrl.toExternalForm()
+								val component = parseComponent(asString, servicePath)
+								synchronized(this) {
+									data.putDescriptor(component.provides, component)
+									owners[component.provides]?.doRegister(component)
 								}
+							}
+						} catch (e: ZipException) {
+							// When a JVM loads a jar, it mmaps the jar. If that jar changes
+							// (as it does when generating plugin metadata in a Gradle daemon)
+							// then you get ZipException after the change. The accuracy of the
+							// registry is irrelevant during metadata generation - the registry
+							// exists during metadata generation only because the `SocketOwner`s
+							// register themselves in their constructors. Therefore, it is safe to
+							// ignore these errors during metadata generation.
+							val prop = System.getProperty("atplug.generate")
+							if (prop != "true") {
+								throw e
 							}
 						}
 					}
 				}
 			}
+		}
+
+		private fun parseComponent(manifestUrl: String, servicePath: String): PlugDescriptor {
+			val serviceUrl =
+					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
+
+			val out = ByteArrayOutputStream()
+			serviceUrl.openStream().use { it.copyTo(out) }
+			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
+			return PlugDescriptor.fromJson(serviceFileContent)
 		}
 
 		override fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
