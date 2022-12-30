@@ -22,8 +22,6 @@ import com.diffplug.gradle.JRE;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -161,8 +159,7 @@ public abstract class PlugGenerateTask extends DefaultTask {
 	private Manifest loadManifest() {
 		Manifest manifest = new Manifest();
 		if (manifestFile().isFile()) {
-			try (InputStream raw = new FileInputStream(manifestFile());
-					InputStream input = new BufferedInputStream(raw)) {
+			try (InputStream input = new BufferedInputStream(Files.newInputStream(manifestFile().toPath()))) {
 				manifest.read(input);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -171,17 +168,16 @@ public abstract class PlugGenerateTask extends DefaultTask {
 		return manifest;
 	}
 
-	private void saveManifest(Manifest manifest) throws IOException {
+	private void saveManifest(Manifest manifest) {
 		FileMisc.mkdirs(manifestFile().getParentFile());
-		try (OutputStream raw = new FileOutputStream(manifestFile());
-				OutputStream output = new BufferedOutputStream(raw)) {
+		try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(manifestFile().toPath()))) {
 			manifest.write(output);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private SortedMap<String, String> generate() throws Throwable {
+	private SortedMap<String, String> generate() {
 		PlugGeneratorJavaExecable input = new PlugGeneratorJavaExecable(new ArrayList<>(getClassesFolders().getFiles()), getJarsToLinkAgainst().getFiles());
 		if (getLauncher().isPresent()) {
 			WorkQueue workQueue = getWorkerExecutor().processIsolation(workerSpec -> {

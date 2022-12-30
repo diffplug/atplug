@@ -7,10 +7,10 @@
 package com.diffplug.atplug
 
 import java.io.ByteArrayOutputStream
+import java.io.EOFException
 import java.lang.reflect.Constructor
 import java.net.URL
 import java.nio.charset.StandardCharsets
-import java.util.*
 import java.util.jar.Manifest
 import java.util.zip.ZipException
 
@@ -33,22 +33,12 @@ interface PlugRegistry {
 		private const val PATH_MANIFEST = "META-INF/MANIFEST.MF"
 		private const val DS_WITHIN_MANIFEST = "AtPlug-Component"
 
-		internal fun parseComponent(manifestUrl: String, servicePath: String): PlugDescriptor {
-			val serviceUrl =
-					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
-
-			val out = ByteArrayOutputStream()
-			serviceUrl.openStream().use { it.copyTo(out) }
-			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
-			return PlugDescriptor.fromJson(serviceFileContent)
-		}
-
 		fun setHarness(data: PlugInstanceMap?) {
 			val registry = instance.value
 			if (registry is Eager) {
 				registry.setHarness(data)
 			} else {
-				throw AssertionError("Registry must not be set, was ${registry}")
+				throw AssertionError("Registry must not be set, was $registry")
 			}
 		}
 	}
@@ -62,37 +52,51 @@ interface PlugRegistry {
 				val values = Eager::class.java.classLoader.getResources(PATH_MANIFEST)
 				while (values.hasMoreElements()) {
 					val manifestUrl = values.nextElement()
-					manifestUrl.openStream().use { stream ->
-						// parse the manifest
-						val manifest = Manifest(stream)
-						val services = manifest.mainAttributes.getValue(DS_WITHIN_MANIFEST)
-						if (services != null) {
-							// it's got declarative services!
-							for (service in
-									services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
-								val servicePath = service.trim { it <= ' ' }
-								try {
-									if (servicePath.isNotEmpty()) {
-										val asString = manifestUrl.toExternalForm()
-										val component = parseComponent(asString, servicePath)
-										synchronized(this) {
-											data.putDescriptor(component.provides, component)
-											owners.get(component.provides)?.doRegister(component)
-										}
-									}
-								} catch (e: ZipException) {
-									// When a JVM loads a jar, it mmaps the jar. If that jar changes
-									// (as it does when generating plugin metadata in a Gradle daemon)
-									// then you get ZipException after the change. The accuracy of the
-									// registry is irrelevant during metadata generation - the registry
-									// exists during metadata generation only because the `SocketOwner`s
-									// register themselves in their constructors. Therefore, it is safe to
-									// ignore these errors during metadata generation.
-									val prop = System.getProperty("atplug.generate")
-									if (prop != "true") {
-										throw e
-									}
+					try {
+						parseManifest(manifestUrl, true)
+					} catch (e: EOFException) {
+						// do the parsing again but this time disable caching
+						// https://stackoverflow.com/questions/36517604/closing-a-jarurlconnection
+						parseManifest(manifestUrl, false)
+					}
+				}
+			}
+		}
+
+		private fun parseManifest(manifestUrl: URL, allowCaching: Boolean) {
+			val connection = manifestUrl.openConnection()
+			if (!allowCaching) {
+				connection.useCaches = false
+			}
+			connection.getInputStream().use { stream ->
+				// parse the manifest
+				val manifest = Manifest(stream)
+				val services = manifest.mainAttributes.getValue(DS_WITHIN_MANIFEST)
+				if (services != null) {
+					// it's got declarative services!
+					for (service in
+							services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
+						val servicePath = service.trim { it <= ' ' }
+						try {
+							if (servicePath.isNotEmpty()) {
+								val asString = manifestUrl.toExternalForm()
+								val component = parseComponent(asString, servicePath, allowCaching)
+								synchronized(this) {
+									data.putDescriptor(component.provides, component)
+									owners[component.provides]?.doRegister(component)
 								}
+							}
+						} catch (e: ZipException) {
+							// When a JVM loads a jar, it mmaps the jar. If that jar changes
+							// (as it does when generating plugin metadata in a Gradle daemon)
+							// then you get ZipException after the change. The accuracy of the
+							// registry is irrelevant during metadata generation - the registry
+							// exists during metadata generation only because the `SocketOwner`s
+							// register themselves in their constructors. Therefore, it is safe to
+							// ignore these errors during metadata generation.
+							val prop = System.getProperty("atplug.generate")
+							if (prop != "true") {
+								throw e
 							}
 						}
 					}
@@ -100,11 +104,29 @@ interface PlugRegistry {
 			}
 		}
 
+		private fun parseComponent(
+				manifestUrl: String,
+				servicePath: String,
+				allowCaching: Boolean
+		): PlugDescriptor {
+			val serviceUrl =
+					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
+
+			val connection = serviceUrl.openConnection()
+			if (!allowCaching) {
+				connection.useCaches = false
+			}
+			val out = ByteArrayOutputStream()
+			connection.getInputStream().use { it.copyTo(out) }
+			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
+			return PlugDescriptor.fromJson(serviceFileContent)
+		}
+
 		override fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
 			synchronized(this) {
 				val prevOwner = owners.put(socketClass.name, socketOwner)
-				assert(prevOwner == null) { "Multiple owners registered for ${socketClass}" }
-				data.descriptorMap.get(socketClass.name)?.forEach(socketOwner::doRegister)
+				assert(prevOwner == null) { "Multiple owners registered for $socketClass" }
+				data.descriptorMap[socketClass.name]?.forEach(socketOwner::doRegister)
 			}
 		}
 
@@ -128,7 +150,7 @@ interface PlugRegistry {
 				"Class must have a no-arg constructor, but it didn't.  " +
 						clazz +
 						" " +
-						Arrays.asList(*clazz.constructors)
+						listOf(*clazz.constructors)
 			}
 			return constructor.newInstance() as T
 		}
@@ -138,12 +160,12 @@ interface PlugRegistry {
 		fun setHarness(newHarness: PlugInstanceMap?) {
 			val toRemove = lastHarness ?: data
 			toRemove.descriptorMap.forEach { (clazz, plugDescriptors) ->
-				owners.get(clazz)?.let { owner -> plugDescriptors.forEach(owner::doRemove) }
+				owners[clazz]?.let { owner -> plugDescriptors.forEach(owner::doRemove) }
 			}
 
 			val toAdd = newHarness ?: data
 			toAdd.descriptorMap.forEach { (clazz, plugDescriptors) ->
-				owners.get(clazz)?.let { owner -> plugDescriptors.forEach(owner::doRegister) }
+				owners[clazz]?.let { owner -> plugDescriptors.forEach(owner::doRegister) }
 			}
 			lastHarness = newHarness
 		}

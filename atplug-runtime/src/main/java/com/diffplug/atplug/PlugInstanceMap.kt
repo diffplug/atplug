@@ -11,7 +11,7 @@ class PlugInstanceMap {
 	internal val instanceMap = mutableMapOf<PlugDescriptor, Any>()
 
 	fun putDescriptor(clazz: String, descriptor: PlugDescriptor) {
-		val descriptors = descriptorMap.computeIfAbsent(clazz) { mutableListOf<PlugDescriptor>() }
+		val descriptors = descriptorMap.computeIfAbsent(clazz) { mutableListOf() }
 		descriptors.add(descriptor)
 	}
 

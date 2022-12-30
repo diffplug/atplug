@@ -9,7 +9,7 @@ package com.diffplug.atplug
 import kotlin.reflect.KClass
 
 /** Annotation which signals that this class implements the given socket. */
-@kotlin.annotation.Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS)
 annotation class Plug(
 		/** Socket type which this plug implements. */
