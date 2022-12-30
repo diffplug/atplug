@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+
+## [1.0.0] - 2022-12-30
 ### Fixed
 - The Gradle daemon would throw `EOFException` when adding new components in a warm daemon due to [Jar URL caching](https://stackoverflow.com/questions/36517604/closing-a-jarurlconnection), now fixed. ([#4](https://github.com/diffplug/atplug/pull/4))
 
