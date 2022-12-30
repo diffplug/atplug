@@ -6,11 +6,8 @@
  */
 package com.diffplug.atplug
 
-import java.lang.annotation.Documented
-
 /** Marks that a method is used to generate metadata, and should therefore return a constant. */
-@Documented
-@kotlin.annotation.Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.SOURCE)
 @Target(
 		AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
 annotation class Metadata

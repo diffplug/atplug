@@ -48,7 +48,7 @@ interface PlugRegistry {
 			if (registry is Eager) {
 				registry.setHarness(data)
 			} else {
-				throw AssertionError("Registry must not be set, was ${registry}")
+				throw AssertionError("Registry must not be set, was $registry")
 			}
 		}
 	}
@@ -77,7 +77,7 @@ interface PlugRegistry {
 										val component = parseComponent(asString, servicePath)
 										synchronized(this) {
 											data.putDescriptor(component.provides, component)
-											owners.get(component.provides)?.doRegister(component)
+											owners[component.provides]?.doRegister(component)
 										}
 									}
 								} catch (e: ZipException) {
@@ -103,8 +103,8 @@ interface PlugRegistry {
 		override fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
 			synchronized(this) {
 				val prevOwner = owners.put(socketClass.name, socketOwner)
-				assert(prevOwner == null) { "Multiple owners registered for ${socketClass}" }
-				data.descriptorMap.get(socketClass.name)?.forEach(socketOwner::doRegister)
+				assert(prevOwner == null) { "Multiple owners registered for $socketClass" }
+				data.descriptorMap[socketClass.name]?.forEach(socketOwner::doRegister)
 			}
 		}
 
@@ -128,7 +128,7 @@ interface PlugRegistry {
 				"Class must have a no-arg constructor, but it didn't.  " +
 						clazz +
 						" " +
-						Arrays.asList(*clazz.constructors)
+						listOf(*clazz.constructors)
 			}
 			return constructor.newInstance() as T
 		}
@@ -138,12 +138,12 @@ interface PlugRegistry {
 		fun setHarness(newHarness: PlugInstanceMap?) {
 			val toRemove = lastHarness ?: data
 			toRemove.descriptorMap.forEach { (clazz, plugDescriptors) ->
-				owners.get(clazz)?.let { owner -> plugDescriptors.forEach(owner::doRemove) }
+				owners[clazz]?.let { owner -> plugDescriptors.forEach(owner::doRemove) }
 			}
 
 			val toAdd = newHarness ?: data
 			toAdd.descriptorMap.forEach { (clazz, plugDescriptors) ->
-				owners.get(clazz)?.let { owner -> plugDescriptors.forEach(owner::doRegister) }
+				owners[clazz]?.let { owner -> plugDescriptors.forEach(owner::doRegister) }
 			}
 			lastHarness = newHarness
 		}
