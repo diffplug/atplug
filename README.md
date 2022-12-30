@@ -1,27 +1,9 @@
 # <img align="left" src="_images/logo_128.png"> AtPlug: Sockets and Plugs without boilerplate
 
-<!---freshmark shields
-output = [
-    link(shield('Gradle plugin', 'plugins.gradle.org', 'com.diffplug.atplug', 'blue'), 'https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog'),
-    link(shield('Maven central', 'mavencentral', 'available', 'blue'), 'https://search.maven.org/search?q=g:com.diffplug.spotless-changelog'),
-    link(shield('Apache 2.0', 'license', 'apache-2.0', 'blue'), 'https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)'),
-    '',
-    link(shield('Changelog', 'changelog', versionLast, 'brightgreen'), 'CHANGELOG.md'),
-    link(shield('Javadoc', 'javadoc', 'yes', 'brightgreen'), 'https://javadoc.jitpack.io/com/github/diffplug/spotless-changelog/spotless-changelog-agg/release~{{versionLast}}/javadoc/'),
-    link(shield('Live chat', 'gitter', 'chat', 'brightgreen'), 'https://gitter.im/diffplug/spotless-changelog'),
-    link(image('CircleCI', 'https://circleci.com/gh/diffplug/spotless-changelog.svg?style=shield'), 'https://circleci.com/gh/diffplug/spotless-changelog')
-    ].join('\n');
--->
-[![Gradle plugin](https://img.shields.io/badge/plugins.gradle.org-com.diffplug.atplug-blue.svg)](https://plugins.gradle.org/plugin/com.diffplug.spotless-changelog)
-[![Maven central](https://img.shields.io/badge/mavencentral-available-blue.svg)](https://search.maven.org/search?q=g:com.diffplug.spotless-changelog)
+[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.diffplug.atplug?color=blue&label=gradle%20plugin%20portal)](https://plugins.gradle.org/plugin/com.diffplug.atplug)
+[![Maven central](https://img.shields.io/maven-central/v/com.diffplug.atplug/atplug-runtime?color=blue&label=com.diffplug.atplug%3Aatplug-runtime)](https://search.maven.org/artifact/com.diffplug.atplug/atplug-runtime)
+[![Changelog](https://img.shields.io/badge/changelog-here-blue)](CHANGELOG.md)
 [![Apache 2.0](https://img.shields.io/badge/license-apache--2.0-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
-
-[![Changelog](https://img.shields.io/badge/changelog-1.0.0-brightgreen.svg)](CHANGELOG.md)
-[![Javadoc](https://img.shields.io/badge/javadoc-yes-brightgreen.svg)](https://javadoc.jitpack.io/com/github/diffplug/spotless-changelog/spotless-changelog-agg/release~1.0.0/javadoc/)
-[![Live chat](https://img.shields.io/badge/gitter-chat-brightgreen.svg)](https://gitter.im/diffplug/spotless-changelog)
-[![CircleCI](https://circleci.com/gh/diffplug/spotless-changelog.svg?style=shield)](https://circleci.com/gh/diffplug/spotless-changelog)
-<!---freshmark /shields -->
-
 
 ## AtPlug is...
 

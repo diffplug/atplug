@@ -13,7 +13,6 @@ group = 干.proj('maven_group', 'the maven group, recommend com.diffplug')
 allprojects {
 	apply from: 干.file('base/changelog.gradle')
 }
-apply from: 干.file('spotless/freshmark.gradle')
 apply from: 干.file('base/sonatype.gradle')
 
 String VER_JUNIT_JUPITER = '5.9.1'
