@@ -80,7 +80,7 @@ interface PlugRegistry {
 						try {
 							if (servicePath.isNotEmpty()) {
 								val asString = manifestUrl.toExternalForm()
-								val component = parseComponent(asString, servicePath, useCaches)
+								val component = parseComponent(asString, servicePath, allowCaching)
 								synchronized(this) {
 									data.putDescriptor(component.provides, component)
 									owners[component.provides]?.doRegister(component)
