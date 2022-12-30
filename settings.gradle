@@ -5,11 +5,11 @@ pluginManagement {
 		id 'com.diffplug.configuration-cache-for-platform-specific-build' version '3.40.0'
 		id 'com.diffplug.spotless'                     version '6.12.0'
 		id 'com.diffplug.spotless-changelog'           version '2.4.1'
+		id 'org.jetbrains.dokka'                       version '1.7.20'
 		id 'org.jetbrains.kotlin.jvm'                  version '1.8.0'
 		id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.0'
 		id 'com.gradle.plugin-publish'                 version '1.1.0'
 		id 'io.github.gradle-nexus.publish-plugin'     version '1.1.0'
-		id 'org.jdrupes.mdoclet'                       version '1.0.10'
 	}
 }
 plugins {
@@ -17,11 +17,11 @@ plugins {
 	id 'com.diffplug.configuration-cache-for-platform-specific-build' apply false
 	id 'com.diffplug.spotless'                     apply false
 	id 'com.diffplug.spotless-changelog'           apply false
+	id 'org.jetbrains.dokka'                       apply false
 	id 'org.jetbrains.kotlin.jvm'                  apply false
 	id 'org.jetbrains.kotlin.plugin.serialization' apply false
 	id 'com.gradle.plugin-publish'                 apply false
 	id 'io.github.gradle-nexus.publish-plugin'     apply false
-	id 'org.jdrupes.mdoclet'                       apply false
 }
 
 blowdryerSetup {
