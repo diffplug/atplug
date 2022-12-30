@@ -7,6 +7,7 @@
 package com.diffplug.atplug
 
 import java.io.ByteArrayOutputStream
+import java.io.EOFException
 import java.lang.reflect.Constructor
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -51,13 +52,23 @@ interface PlugRegistry {
 				val values = Eager::class.java.classLoader.getResources(PATH_MANIFEST)
 				while (values.hasMoreElements()) {
 					val manifestUrl = values.nextElement()
-					parseManifest(manifestUrl)
+					try {
+						parseManifest(manifestUrl, true)
+					} catch (e: EOFException) {
+						// do the parsing again but this time disable caching
+						// https://stackoverflow.com/questions/36517604/closing-a-jarurlconnection
+						parseManifest(manifestUrl, false)
+					}
 				}
 			}
 		}
 
-		private fun parseManifest(manifestUrl: URL) {
-			manifestUrl.openStream().use { stream ->
+		private fun parseManifest(manifestUrl: URL, allowCaching: Boolean) {
+			val connection = manifestUrl.openConnection()
+			if (!allowCaching) {
+				connection.useCaches = false
+			}
+			connection.getInputStream().use { stream ->
 				// parse the manifest
 				val manifest = Manifest(stream)
 				val services = manifest.mainAttributes.getValue(DS_WITHIN_MANIFEST)
@@ -69,7 +80,7 @@ interface PlugRegistry {
 						try {
 							if (servicePath.isNotEmpty()) {
 								val asString = manifestUrl.toExternalForm()
-								val component = parseComponent(asString, servicePath)
+								val component = parseComponent(asString, servicePath, useCaches)
 								synchronized(this) {
 									data.putDescriptor(component.provides, component)
 									owners[component.provides]?.doRegister(component)
@@ -93,12 +104,20 @@ interface PlugRegistry {
 			}
 		}
 
-		private fun parseComponent(manifestUrl: String, servicePath: String): PlugDescriptor {
+		private fun parseComponent(
+				manifestUrl: String,
+				servicePath: String,
+				allowCaching: Boolean
+		): PlugDescriptor {
 			val serviceUrl =
 					URL(manifestUrl.substring(0, manifestUrl.length - PATH_MANIFEST.length) + servicePath)
 
+			val connection = serviceUrl.openConnection()
+			if (!allowCaching) {
+				connection.useCaches = false
+			}
 			val out = ByteArrayOutputStream()
-			serviceUrl.openStream().use { it.copyTo(out) }
+			connection.getInputStream().use { it.copyTo(out) }
 			val serviceFileContent = String(out.toByteArray(), StandardCharsets.UTF_8)
 			return PlugDescriptor.fromJson(serviceFileContent)
 		}
