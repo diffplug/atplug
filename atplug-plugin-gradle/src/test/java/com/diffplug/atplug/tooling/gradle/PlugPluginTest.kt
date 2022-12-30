@@ -14,7 +14,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 				.toContent(
 						"""
 						plugins {
-							id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+							id 'org.jetbrains.kotlin.jvm' version '1.8.0'
 							id 'com.diffplug.atplug'
 						}
 						repositories {
@@ -22,9 +22,10 @@ class PlugPluginTest : GradleIntegrationHarness() {
 						}
 						dependencies {
 							implementation files("$runtimeJar")
-							implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
+							implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
 						}
-				""".trimIndent())
+				"""
+								.trimIndent())
 
 		val copy = { str: String ->
 			val src = File("../atplug-runtime/src/test/java/com/diffplug/atplug/$str")

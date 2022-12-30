@@ -15,7 +15,6 @@
  */
 package com.diffplug.atplug.tooling.gradle;
 
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -51,7 +50,7 @@ public class PlugPlugin implements Plugin<Project> {
 		JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 		SourceSet main = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
 
-		Dependency dep = project.getDependencies().create("org.jetbrains.kotlin:kotlin-reflect:1.6.10");
+		Dependency dep = project.getDependencies().create("org.jetbrains.kotlin:kotlin-reflect:1.8.0");
 		Configuration plugGenConfig = project.getConfigurations().create("plugGenerate", plugGen -> {
 			plugGen.extendsFrom(project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME));
 			plugGen.getDependencies().add(dep);
