@@ -15,7 +15,6 @@
  */
 package com.diffplug.atplug.tooling.gradle;
 
-
 import com.diffplug.atplug.tooling.PlugGeneratorJavaExecable;
 import com.diffplug.gradle.FileMisc;
 import com.diffplug.gradle.JRE;

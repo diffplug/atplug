@@ -22,8 +22,8 @@ class PlugGeneratorTest : ResourceHarness() {
 						.provisionWithTransitives(
 								true,
 								listOf(
-										"org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2",
-										"org.jetbrains.kotlin:kotlin-reflect:1.6.10"))
+										"org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1",
+										"org.jetbrains.kotlin:kotlin-reflect:1.8.0"))
 		val atplug_runtime = mutableSetOf(findRuntimeJar())
 		atplug_runtime.addAll(transitives)
 		return atplug_runtime

@@ -67,7 +67,7 @@ object TestProvisioner {
 				config.resolve()
 			} catch (e: ResolveException) {
 				/* Provide Maven coordinates in exception message instead of static string 'detachedConfiguration' */
-				throw ResolveException(config.description, e)
+				throw ResolveException(mavenCoords.toString(), e)
 			} finally {
 				// delete the temp dir
 				Files.walk(tempDir.toPath())
