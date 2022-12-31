@@ -58,6 +58,11 @@ interface PlugRegistry {
 						// do the parsing again but this time disable caching
 						// https://stackoverflow.com/questions/36517604/closing-a-jarurlconnection
 						parseManifest(manifestUrl, false)
+					} catch (e: ZipException) {
+						// When a JVM loads a jar, it mmaps the jar. If that jar changes
+						// (as it does when generating plugin metadata in a Gradle daemon)
+						// then you sometimes get ZipException after the change.
+						parseManifest(manifestUrl, false)
 					}
 				}
 			}
@@ -77,26 +82,12 @@ interface PlugRegistry {
 					for (service in
 							services.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
 						val servicePath = service.trim { it <= ' ' }
-						try {
-							if (servicePath.isNotEmpty()) {
-								val asString = manifestUrl.toExternalForm()
-								val component = parseComponent(asString, servicePath, allowCaching)
-								synchronized(this) {
-									data.putDescriptor(component.provides, component)
-									owners[component.provides]?.doRegister(component)
-								}
-							}
-						} catch (e: ZipException) {
-							// When a JVM loads a jar, it mmaps the jar. If that jar changes
-							// (as it does when generating plugin metadata in a Gradle daemon)
-							// then you get ZipException after the change. The accuracy of the
-							// registry is irrelevant during metadata generation - the registry
-							// exists during metadata generation only because the `SocketOwner`s
-							// register themselves in their constructors. Therefore, it is safe to
-							// ignore these errors during metadata generation.
-							val prop = System.getProperty("atplug.generate")
-							if (prop != "true") {
-								throw e
+						if (servicePath.isNotEmpty()) {
+							val asString = manifestUrl.toExternalForm()
+							val component = parseComponent(asString, servicePath, allowCaching)
+							synchronized(this) {
+								data.putDescriptor(component.provides, component)
+								owners[component.provides]?.doRegister(component)
 							}
 						}
 					}

@@ -43,7 +43,6 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	private val metadataGeneratorFor: KFunction<Function<Any, String>>
 
 	init {
-		System.setProperty("atplug.generate", "true")
 		// create a classloader which looks in toSearch first, then each of the jars in toLinkAgainst
 		val urls = (toSearches + toLinkAgainst).map { it.toURI().toURL() }.toTypedArray()
 		val parent: ClassLoader? =
@@ -54,8 +53,8 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		metadataGeneratorFor =
 				socketOwnerCompanionObject::class.memberFunctions.find {
 					it.name == "metadataGeneratorFor"
-				}!! as
-						KFunction<Function<Any, String>>
+				}!!
+						as KFunction<Function<Any, String>>
 		try {
 			val parser = PlugParser()
 			// walk toSearch, passing each classfile to load()
