@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 ### Fixed
-- Fixing `EOFException` Gradle daemon problem brought the `ZipException` problem back, now fixed. ([#5](https://github.com/diffplug/atplug/pull/5))
+- Fixing `EOFException` Gradle daemon problem brought the `ZipException` problem back, now fixed. ([#6](https://github.com/diffplug/atplug/pull/6))
 
 ## [1.0.0] - 2022-12-30
 ### Fixed
