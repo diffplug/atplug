@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+
+## [1.0.1] - 2022-12-31
 ### Fixed
 - Fixing `EOFException` Gradle daemon problem brought the `ZipException` problem back, now fixed. ([#6](https://github.com/diffplug/atplug/pull/6))
 
