@@ -24,8 +24,6 @@ subprojects {
 		testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
 		testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
 	}
-
-	ext.kotlin_jvmTarget = '1.8'
 	if (it.name == 'atplug-runtime') {
 		ext.maven_name = 'AtPlug runtime'
 		apply plugin: 'kotlinx-serialization'
