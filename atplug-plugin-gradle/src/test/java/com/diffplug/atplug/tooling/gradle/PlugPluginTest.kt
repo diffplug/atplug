@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 class PlugPluginTest : GradleIntegrationHarness() {
 	@Test
 	fun test() {
-		val runtimeJar = PlugGeneratorTest.findRuntimeJar().canonicalPath
+		val runtimeJar = PlugGeneratorTest.findRuntimeJar().canonicalPath.replace('\\', '/')
 		setFile("build.gradle")
 				.toContent(
 						"""
