@@ -22,20 +22,15 @@ import com.diffplug.gradle.JRE
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.*
-import java.util.function.Consumer
+import java.util.SortedMap
 import java.util.jar.Attributes
 import java.util.jar.Manifest
-import java.util.stream.Collectors
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
-import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
@@ -57,8 +52,6 @@ abstract class PlugGenerateTask : DefaultTask() {
 
 	@get:Inject abstract val workerExecutor: WorkerExecutor
 
-	@get:Inject abstract val fS: ObjectFactory?
-
 	@get:InputFiles @get:Classpath abstract val jarsToLinkAgainst: ConfigurableFileCollection
 
 	@get:Internal var resourcesFolder: File? = null
@@ -70,9 +63,9 @@ abstract class PlugGenerateTask : DefaultTask() {
 	@InputFiles var classesFolders: FileCollection? = null
 
 	init {
-		this.outputs.upToDateWhen { unused: Task? ->
+		this.outputs.upToDateWhen {
 			val manifest = loadManifest()
-			val componentsCmd = atplugComponents()
+			val componentsCmd = atplugComponents(atplugInfFolder)
 			val componentsActual = manifest.mainAttributes.getValue(PlugPlugin.SERVICE_COMPONENT)
 			componentsActual == componentsCmd
 		}
@@ -98,7 +91,7 @@ abstract class PlugGenerateTask : DefaultTask() {
 
 		// clean out the ATPLUG-INF folder, and put the map's content into the folder
 		FileMisc.cleanDir(atplugInfFolder)
-		for ((key, value) in result!!) {
+		for ((key, value) in result) {
 			val serviceFile = File(atplugInfFolder, key + PlugPlugin.DOT_JSON)
 			Files.write(serviceFile.toPath(), value.toByteArray(StandardCharsets.UTF_8))
 		}
@@ -107,7 +100,7 @@ abstract class PlugGenerateTask : DefaultTask() {
 		// for tests to work
 		// so we'll get a manifest (empty if necessary, but preferably we'll load what already exists)
 		val manifest = loadManifest()
-		val componentsCmd = atplugComponents()
+		val componentsCmd = atplugComponents(atplugInfFolder)
 		val componentsActual = manifest.mainAttributes.getValue(PlugPlugin.SERVICE_COMPONENT)
 		if (componentsActual == componentsCmd) {
 			return
@@ -131,12 +124,8 @@ abstract class PlugGenerateTask : DefaultTask() {
 	private fun loadManifest(): Manifest {
 		val manifest = Manifest()
 		if (manifestFile().isFile) {
-			try {
-				BufferedInputStream(Files.newInputStream(manifestFile().toPath())).use { input ->
-					manifest.read(input)
-				}
-			} catch (e: IOException) {
-				throw RuntimeException(e)
+			BufferedInputStream(Files.newInputStream(manifestFile().toPath())).use { input ->
+				manifest.read(input)
 			}
 		}
 		return manifest
@@ -144,16 +133,12 @@ abstract class PlugGenerateTask : DefaultTask() {
 
 	private fun saveManifest(manifest: Manifest) {
 		FileMisc.mkdirs(manifestFile().parentFile)
-		try {
-			BufferedOutputStream(Files.newOutputStream(manifestFile().toPath())).use { output ->
-				manifest.write(output)
-			}
-		} catch (e: IOException) {
-			throw RuntimeException(e)
+		BufferedOutputStream(Files.newOutputStream(manifestFile().toPath())).use { output ->
+			manifest.write(output)
 		}
 	}
 
-	private fun generate(): SortedMap<String, String>? {
+	private fun generate(): SortedMap<String, String> {
 		val input =
 				PlugGeneratorJavaExecable(ArrayList(classesFolders!!.files), jarsToLinkAgainst.files)
 		return if (launcher.isPresent) {
@@ -164,53 +149,44 @@ abstract class PlugGenerateTask : DefaultTask() {
 							options.setExecutable(launcher.get().executablePath)
 						}
 					}
-			exec(workQueue, input).atplugInf
+			exec(workQueue, input).atplugInf!!
 		} else {
 			input.run()
-			input.atplugInf
+			input.atplugInf!!
 		}
-	}
-
-	private fun atplugComponents(): String? {
-		return atplugComponents(atplugInfFolder)
 	}
 
 	companion object {
 		fun atplugComponents(atplugInf: File): String? {
-			return if (!atplugInf.isDirectory) {
-				null
-			} else {
+			return if (!atplugInf.isDirectory) null
+			else {
 				val serviceComponents: MutableList<String> = ArrayList()
 				for (file in FileMisc.list(atplugInf)) {
 					if (file.name.endsWith(PlugPlugin.DOT_JSON)) {
 						serviceComponents.add(PlugPlugin.ATPLUG_INF + file.name)
 					}
 				}
-				Collections.sort(serviceComponents)
-				serviceComponents.stream().collect(Collectors.joining(","))
+				serviceComponents.sort()
+				serviceComponents.joinToString(",")
 			}
 		}
 
 		fun fromLocalClassloader(): Set<File> {
-			val files: MutableSet<File> = LinkedHashSet()
-			val addPeerClasses = Consumer { clazz: Class<*> ->
-				try {
-					for (url in JRE.getClasspath(clazz.classLoader)) {
-						val name = url.file
-						if (name != null) {
-							files.add(File(name))
-						}
+			val files = mutableSetOf<File>()
+			val addPeerClasses = { clazz: Class<*> ->
+				for (url in JRE.getClasspath(clazz.classLoader)) {
+					val name = url.file
+					if (name != null) {
+						files.add(File(name))
 					}
-				} catch (e: Exception) {
-					throw RuntimeException(e)
 				}
 			}
 			// add the classes that we need
-			addPeerClasses.accept(PlugGeneratorJavaExecable::class.java)
+			addPeerClasses(PlugGeneratorJavaExecable::class.java)
 			// add the gradle API
-			addPeerClasses.accept(JavaExec::class.java)
+			addPeerClasses(JavaExec::class.java)
 			// Needed because of Gradle API classloader hierarchy changes with 2c5adc8 in Gradle 6.7+
-			addPeerClasses.accept(FileCollection::class.java)
+			addPeerClasses(FileCollection::class.java)
 			return files
 		}
 	}
