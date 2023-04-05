@@ -11,7 +11,7 @@ import java.lang.AutoCloseable
 class PlugHarness {
 	var map = PlugInstanceMap()
 
-	fun <T> add(clazz: Class<T>, instance: T): PlugHarness {
+	fun <T : Any> add(clazz: Class<T>, instance: T): PlugHarness {
 		val descriptor = SocketOwner.metadataGeneratorFor(clazz).apply(instance)
 		map.putInstance(clazz, PlugDescriptor.fromJson(descriptor), instance)
 		return this

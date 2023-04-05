@@ -14,11 +14,11 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 
-abstract class SocketOwner<T>(val socketClass: Class<T>) {
+abstract class SocketOwner<T : Any>(val socketClass: Class<T>) {
 	abstract fun metadata(plug: T): Map<String, String>
 
 	fun asDescriptor(plug: T) =
-			PlugDescriptor(plug!!::class.java.name, socketClass.name, metadata(plug)).toJson()
+			PlugDescriptor(plug::class.java.name, socketClass.name, metadata(plug)).toJson()
 
 	/**
 	 * Instantiates the given plug. Already implemented by the default implementations [SingletonById]
@@ -39,7 +39,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 
 	protected abstract fun remove(plugDescriptor: PlugDescriptor)
 
-	abstract class EphemeralByDescriptor<T, ParsedDescriptor>(socketClass: Class<T>) :
+	abstract class EphemeralByDescriptor<T : Any, ParsedDescriptor>(socketClass: Class<T>) :
 			SocketOwner<T>(socketClass) {
 		private val descriptors = mutableMapOf<ParsedDescriptor, PlugDescriptor>()
 		init {
@@ -51,13 +51,15 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 
 		protected abstract fun parse(plugDescriptor: PlugDescriptor): ParsedDescriptor
 
-		protected fun <R> computeAgainstDescriptors(compute: Function<Set<ParsedDescriptor>, R>): R {
+		protected fun <R : Any> computeAgainstDescriptors(
+				compute: Function<Set<ParsedDescriptor>, R>
+		): R {
 			synchronized(this) {
 				return compute.apply(descriptors.keys)
 			}
 		}
 
-		protected fun <R> forEachDescriptor(forEach: Consumer<ParsedDescriptor>) {
+		protected fun forEachDescriptor(forEach: Consumer<ParsedDescriptor>) {
 			synchronized(this) { descriptors.keys.forEach(forEach) }
 		}
 
@@ -85,8 +87,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 				predicateInstance: Predicate<T>
 		): T? {
 			synchronized(this) {
-				return descriptors
-						.keys
+				return descriptors.keys
 						.filter { predicateDescriptor.test(it) }
 						.sortedWith(order)
 						.map { instantiatePlug(descriptors[it]!!) }
@@ -120,7 +121,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 		open fun removeHook(plugDescriptor: PlugDescriptor) {}
 	}
 
-	abstract class SingletonById<T>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
+	abstract class SingletonById<T : Any>(socketClass: Class<T>) : SocketOwner<T>(socketClass) {
 		private val descriptorById = mutableMapOf<String, PlugDescriptor>()
 		private val singletonById = mutableMapOf<String, T>()
 		init {
@@ -179,7 +180,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 	companion object {
 		const val KEY_ID = "id"
 
-		fun <T> metadataGeneratorFor(socketClass: Class<T>): Function<T, String> {
+		fun <T : Any> metadataGeneratorFor(socketClass: Class<T>): Function<T, String> {
 			var firstAttempt: Throwable? = null
 			try {
 				val socketField = socketClass.getDeclaredField("socket")
@@ -204,7 +205,7 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 			}
 		}
 
-		private fun <T> generatorForSocket(socket: SocketOwner<T>): Function<T, String> {
+		private fun <T : Any> generatorForSocket(socket: SocketOwner<T>): Function<T, String> {
 			return Function { plug ->
 				try {
 					socket.asDescriptor(plug)
@@ -212,14 +213,14 @@ abstract class SocketOwner<T>(val socketClass: Class<T>) {
 					if (rootCause(e) is ClassNotFoundException) {
 						throw RuntimeException(
 								"Unable to generate metadata for " +
-										plug!!::class.java +
+										plug::class.java +
 										", missing transitive dependency " +
 										rootCause(e).message,
 								e)
 					} else {
 						throw RuntimeException(
 								"Unable to generate metadata for " +
-										plug!!::class.java +
+										plug::class.java +
 										", make sure that its metadata methods return simple constants: " +
 										e.message,
 								e)
