@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 DiffPlug
+ * Copyright (C) 2020-2023 DiffPlug
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class PlugPlugin implements Plugin<Project> {
 		JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 		SourceSet main = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
 
-		Dependency dep = project.getDependencies().create("org.jetbrains.kotlin:kotlin-reflect:1.8.0");
+		Dependency dep = project.getDependencies().create("org.jetbrains.kotlin:kotlin-reflect:1.8.20");
 		Configuration plugGenConfig = project.getConfigurations().create("plugGenerate", plugGen -> {
 			plugGen.extendsFrom(project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME));
 			plugGen.getDependencies().add(dep);
