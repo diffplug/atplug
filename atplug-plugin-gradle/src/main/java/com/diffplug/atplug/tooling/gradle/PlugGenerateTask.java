@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 DiffPlug
+ * Copyright (C) 2020-2023 DiffPlug
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,10 +185,10 @@ public abstract class PlugGenerateTask extends DefaultTask {
 					options.setExecutable(getLauncher().get().getExecutablePath());
 				});
 			});
-			return JavaExecable.exec(workQueue, input).getAtplugInf();
+			return JavaExecable.exec(workQueue, input).atplugInf;
 		} else {
 			input.run();
-			return input.getAtplugInf();
+			return input.atplugInf;
 		}
 	}
 
