@@ -7,15 +7,18 @@
 package com.diffplug.atplug
 
 import java.lang.AutoCloseable
+import kotlin.reflect.KClass
 
 class PlugHarness {
 	var map = PlugInstanceMap()
 
-	fun <T> add(clazz: Class<T>, instance: T): PlugHarness {
-		val descriptor = SocketOwner.metadataGeneratorFor(clazz).apply(instance)
+	fun <T : Any> add(clazz: KClass<T>, instance: T): PlugHarness {
+		val descriptor = SocketOwner.metadataGeneratorFor(clazz.java).apply(instance)
 		map.putInstance(clazz, PlugDescriptor.fromJson(descriptor), instance)
 		return this
 	}
+
+	fun <T : Any> add(clazz: Class<T>, instance: T): PlugHarness = add(clazz.kotlin, instance)
 
 	fun start(): AutoCloseable {
 		PlugRegistry.setHarness(map)

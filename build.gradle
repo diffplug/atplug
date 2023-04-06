@@ -11,10 +11,17 @@ allprojects {
 }
 apply from: 干.file('base/sonatype.gradle')
 
-String VER_JUNIT_JUPITER = '5.9.1'
+String VER_JUNIT_JUPITER = '5.9.2'
 subprojects {
 	apply from: 干.file('base/java.gradle')
 	apply from: 干.file('base/kotlin.gradle')
+//	kotlin {
+//		sourceSets.all {
+//			languageSettings {
+//				languageVersion = "2.0"
+//			}
+//		}
+//	}
 	apply from: 干.file('spotless/java.gradle')
 	apply plugin: 'java-library'
 
@@ -28,22 +35,22 @@ subprojects {
 		ext.maven_name = 'AtPlug runtime'
 		apply plugin: 'kotlinx-serialization'
 		dependencies {
-			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
 		}
 	} else if (it.name == 'atplug-test-harness') {
 		ext.maven_name='AtPlug test harness'
 		dependencies {
 			compileOnly "org.junit.jupiter:junit-jupiter-api:5.0.0"
-			implementation "org.jetbrains.kotlin:kotlin-reflect:1.8.0"
+			implementation "org.jetbrains.kotlin:kotlin-reflect:1.8.20"
 			implementation project(':atplug-runtime')
 		}
 	} else if (it.name == 'atplug-plugin-gradle') {
 		ext.maven_name='AtPlug metadata generation Gradle plugin'
 		apply from: 干.file('base/gradle-plugin.gradle')
 		dependencies {
-			implementation "org.ow2.asm:asm:9.4"
-			implementation 'com.diffplug.gradle:goomph:3.40.0'
-			testImplementation 'org.assertj:assertj-core:3.23.1'
+			implementation "org.ow2.asm:asm:9.5"
+			implementation 'com.diffplug.gradle:goomph:3.41.0'
+			testImplementation 'org.assertj:assertj-core:3.24.2'
 		}
 		tasks.named('test') {
 			dependsOn ':atplug-runtime:jar', ':atplug-runtime:testClasses'

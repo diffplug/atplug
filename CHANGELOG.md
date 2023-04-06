@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+### Added
+- Add methods for taking `KClass` instead of just `Class` to prepare for Kotlin Multiplatform. ([#8](https://github.com/diffplug/atplug/pull/8))
 
 ## [1.0.1] - 2022-12-31
 ### Fixed

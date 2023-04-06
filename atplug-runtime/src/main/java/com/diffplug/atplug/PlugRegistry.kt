@@ -13,20 +13,31 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.jar.Manifest
 import java.util.zip.ZipException
+import kotlin.reflect.KClass
 
 interface PlugRegistry {
-	fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>)
+	fun <T : Any> registerSocket(socketClass: KClass<T>, socketOwner: SocketOwner<T>)
 
-	fun <T> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T
+	fun <T : Any> instantiatePlug(socketClass: KClass<T>, plugDescriptor: PlugDescriptor): T
+
+	fun <T : Any> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
+		registerSocket(socketClass.kotlin, socketOwner)
+	}
+
+	fun <T : Any> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T =
+			instantiatePlug(socketClass.kotlin, plugDescriptor)
 
 	companion object {
 		private val instance: Lazy<PlugRegistry> = lazy { Eager() }
 
-		internal fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
+		internal fun <T : Any> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
 			instance.value.registerSocket(socketClass, socketOwner)
 		}
 
-		internal fun <T> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T {
+		internal fun <T : Any> instantiatePlug(
+				socketClass: Class<T>,
+				plugDescriptor: PlugDescriptor
+		): T {
 			return instance.value.instantiatePlug(socketClass, plugDescriptor)
 		}
 
@@ -113,15 +124,18 @@ interface PlugRegistry {
 			return PlugDescriptor.fromJson(serviceFileContent)
 		}
 
-		override fun <T> registerSocket(socketClass: Class<T>, socketOwner: SocketOwner<T>) {
+		override fun <T : Any> registerSocket(socketClass: KClass<T>, socketOwner: SocketOwner<T>) {
 			synchronized(this) {
-				val prevOwner = owners.put(socketClass.name, socketOwner)
+				val prevOwner = owners.put(socketClass.qualifiedName!!, socketOwner)
 				assert(prevOwner == null) { "Multiple owners registered for $socketClass" }
-				data.descriptorMap[socketClass.name]?.forEach(socketOwner::doRegister)
+				data.descriptorMap[socketClass.qualifiedName]?.forEach(socketOwner::doRegister)
 			}
 		}
 
-		override fun <T> instantiatePlug(socketClass: Class<T>, plugDescriptor: PlugDescriptor): T {
+		override fun <T : Any> instantiatePlug(
+				socketClass: KClass<T>,
+				plugDescriptor: PlugDescriptor
+		): T {
 			val value =
 					lastHarness?.instanceFor(plugDescriptor)
 							?: instantiate(Class.forName(plugDescriptor.implementation))
@@ -129,7 +143,7 @@ interface PlugRegistry {
 			return value as T
 		}
 
-		private fun <T> instantiate(clazz: Class<out T>): T {
+		private fun <T : Any> instantiate(clazz: Class<out T>): T {
 			var constructor: Constructor<*>? = null
 			for (candidate in clazz.declaredConstructors) {
 				if (candidate.parameterCount == 0) {

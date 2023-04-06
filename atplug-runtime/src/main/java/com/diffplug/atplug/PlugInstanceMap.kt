@@ -6,6 +6,8 @@
  */
 package com.diffplug.atplug
 
+import kotlin.reflect.KClass
+
 class PlugInstanceMap {
 	internal val descriptorMap = mutableMapOf<String, MutableList<PlugDescriptor>>()
 	internal val instanceMap = mutableMapOf<PlugDescriptor, Any>()
@@ -15,9 +17,13 @@ class PlugInstanceMap {
 		descriptors.add(descriptor)
 	}
 
-	fun <T> putInstance(clazz: Class<T>, descriptor: PlugDescriptor, instance: T) {
-		putDescriptor(clazz.name, descriptor)
-		instanceMap[descriptor] = instance!!
+	fun <T : Any> putInstance(clazz: KClass<T>, descriptor: PlugDescriptor, instance: T) {
+		putDescriptor(clazz.qualifiedName!!, descriptor)
+		instanceMap[descriptor] = instance
+	}
+
+	fun <T : Any> putInstance(clazz: Class<T>, descriptor: PlugDescriptor, instance: T) {
+		putInstance(clazz.kotlin, descriptor, instance)
 	}
 
 	fun instanceFor(plugDescriptor: PlugDescriptor) = instanceMap[plugDescriptor]
