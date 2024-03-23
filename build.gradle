@@ -48,7 +48,7 @@ subprojects {
 		ext.maven_name='AtPlug metadata generation Gradle plugin'
 		apply from: 干.file('base/gradle-plugin.gradle')
 		dependencies {
-			implementation "org.ow2.asm:asm:9.5"
+			implementation "org.ow2.asm:asm:9.7"
 			implementation 'com.diffplug.gradle:goomph:3.41.0'
 			testImplementation 'org.assertj:assertj-core:3.24.2'
 		}
