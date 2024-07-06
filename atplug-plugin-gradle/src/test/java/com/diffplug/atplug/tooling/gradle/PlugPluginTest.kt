@@ -14,7 +14,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 				.toContent(
 						"""
 						plugins {
-							id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+							id 'org.jetbrains.kotlin.jvm' version '2.0.0'
 							id 'com.diffplug.atplug'
 						}
 						repositories {
@@ -22,7 +22,7 @@ class PlugPluginTest : GradleIntegrationHarness() {
 						}
 						dependencies {
 							implementation files("$runtimeJar")
-							implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+							implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1"
 						}
 				"""
 								.trimIndent())
