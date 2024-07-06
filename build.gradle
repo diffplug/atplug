@@ -3,6 +3,11 @@ plugins {
 	id 'com.diffplug.spotless-changelog'
 }
 
+spotlessChangelog {
+	tagMessage '{{changes}}'
+	runAfterPush "gh release create release/{{version}} --title 'v{{version}}' --notes-from-tag"
+}
+
 repositories { mavenCentral() }
 
 group = 干.proj('maven_group', 'the maven group, recommend com.diffplug')
