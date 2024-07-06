@@ -21,8 +21,8 @@ subprojects {
 	repositories { mavenCentral() }
 
 	dependencies {
-		testImplementation "org.junit.jupiter:junit-jupiter-api:${VER_JUNIT_JUPITER}"
-		testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${VER_JUNIT_JUPITER}"
+		testImplementation "org.junit.jupiter:junit-jupiter:${VER_JUNIT_JUPITER}"
+		testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 	}
 	if (it.name == 'atplug-runtime') {
 		ext.maven_name = 'AtPlug runtime'
