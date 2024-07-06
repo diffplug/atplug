@@ -43,9 +43,11 @@ jobs:
         uses: gradle/gradle-build-action@v3
         with:
           gradle-home-cache-cleanup: true
-      - name: git fetch origin main
-        run: git fetch origin main
+      - run: git fetch origin main
       - name: publish all
         if: "${{ github.event.inputs.to_publish == 'all' }}"
         run: |
           ./gradlew :changelogPush -Prelease=true -Penable_publishing=true -Pgradle.publish.key=${{ secrets.GRADLE_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_SECRET }} --stacktrace --warning-mode all
+      - run: git checkout main
+      - run: git merge release
+      - run: git push origin main
