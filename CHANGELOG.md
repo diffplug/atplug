@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+### Changed
+- Bump all dependencies to latest, especially Kotlin to 2.0. ([#22](https://github.com/diffplug/atplug/pull/22))
 
 ## [1.1.0] - 2023-04-06
 ### Added
