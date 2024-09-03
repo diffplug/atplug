@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+### Changed
+- Bump all dependencies to latest.
 
 ## [1.1.1] - 2024-07-06
 ### Changed
