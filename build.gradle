@@ -48,7 +48,7 @@ subprojects {
 		dependencies {
 			implementation "org.ow2.asm:asm:9.7.1"
 			implementation 'com.diffplug.gradle:goomph:4.2.0'
-			testImplementation 'org.assertj:assertj-core:3.27.0'
+			testImplementation 'org.assertj:assertj-core:3.27.2'
 		}
 		tasks.named('test') {
 			dependsOn ':atplug-runtime:jar', ':atplug-runtime:testClasses'
