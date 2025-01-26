@@ -13,7 +13,7 @@ jobs:
         jre: [17]
         os: [ubuntu-latest, windows-latest]
         include:
-          - jre: 11
+          - jre: 21
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
