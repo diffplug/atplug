@@ -40,8 +40,7 @@ class PlugPlugin : Plugin<Project> {
 		val main = javaExtension.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 		val plugin =
 				project.plugins.findPlugin("org.jetbrains.kotlin.jvm")
-						as org.jetbrains.kotlin.gradle.plugin.KotlinApiPlugin
-
+						as org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 		val dep =
 				project.dependencies.create("org.jetbrains.kotlin:kotlin-reflect:${plugin.pluginVersion}")
 		val plugGenConfig =
