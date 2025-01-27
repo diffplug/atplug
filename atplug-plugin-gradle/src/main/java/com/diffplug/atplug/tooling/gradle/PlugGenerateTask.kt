@@ -73,34 +73,20 @@ abstract class PlugGenerateTask : DefaultTask() {
 
 	@TaskAction
 	fun build() {
-		// 1) Collect the discovered classes
-		val discoveredFiles =
-				discoveredPlugsDir.get().asFile.listFiles().orEmpty().filter {
-					it.isFile && it.name.endsWith(".txt")
+		val discoveredFiles = discoveredPlugsDir.get().asFile.listFiles().orEmpty().filter { it.isFile }
+		val plugsToSockets =
+				discoveredFiles.associate {
+					val pieces = it.readText().split("|")
+					pieces[0] to pieces[1]
 				}
-
-		// Turn them into a list of (plugClass, socketClass)
-		val discoveredPlugs =
-				discoveredFiles
-						.map { file ->
-							val line = file.readText(StandardCharsets.UTF_8).trim()
-							val split = line.split("|")
-							check(split.size == 2) { "Malformed discovered line in ${file.name}: '$line'" }
-							val (plugClassName, socketClassName) = split
-							plugClassName to socketClassName
-						}
-						.toMap()
-
-		// 2) Use reflection logic, now that we have jarsToLinkAgainst, to produce final metadata
-		//    This is where you'd adapt the old PlugGenerator invocation, but no scanning is needed
-		if (discoveredPlugs.isEmpty()) {
+		if (plugsToSockets.isEmpty()) {
 			// no discovered plugs
 			FileMisc.cleanDir(atplugInfFolder)
 			return
 		}
 
 		// generate the metadata
-		val result = generate(discoveredPlugs)
+		val result = generate(plugsToSockets)
 
 		// clean out the ATPLUG-INF folder, and put the map's content into the folder
 		FileMisc.cleanDir(atplugInfFolder)
@@ -110,8 +96,8 @@ abstract class PlugGenerateTask : DefaultTask() {
 		}
 
 		// the resources directory *needs* the Service-Component entry of the manifest to exist in order
-		// for tests to work
-		// so we'll get a manifest (empty if necessary, but preferably we'll load what already exists)
+		// for tests to work so we'll get a manifest (empty if necessary, but preferably we'll load what
+		// already exists)
 		val manifest = loadManifest()
 		val componentsCmd = atplugComponents(atplugInfFolder)
 		val componentsActual = manifest.mainAttributes.getValue(PlugPlugin.SERVICE_COMPONENT)

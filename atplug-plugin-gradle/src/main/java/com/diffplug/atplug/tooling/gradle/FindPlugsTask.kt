@@ -2,7 +2,6 @@ package com.diffplug.atplug.tooling.gradle
 
 import com.diffplug.atplug.tooling.PlugParser
 import java.io.File
-import java.nio.charset.StandardCharsets
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -20,7 +19,7 @@ abstract class FindPlugsTask : DefaultTask() {
 	@get:InputFiles
 	abstract val classesFolders: ConfigurableFileCollection
 
-	/** Directory where we will store discovered plugs in .txt files, etc. */
+	/** Directory where we will store discovered plugs. */
 	@get:OutputDirectory abstract val discoveredPlugsDir: DirectoryProperty
 
 	@TaskAction
@@ -34,6 +33,7 @@ abstract class FindPlugsTask : DefaultTask() {
 		discoveredPlugsDir.get().asFile.mkdirs()
 
 		// For each changed file in classesFolders, determine if it has @Plug
+		val parser = PlugParser()
 		for (change in inputChanges.getFileChanges(classesFolders)) {
 			if (!change.file.name.endsWith(".class")) {
 				continue
@@ -45,21 +45,26 @@ abstract class FindPlugsTask : DefaultTask() {
 				}
 				ChangeType.ADDED,
 				ChangeType.MODIFIED -> {
-					parseAndWriteMetadata(change.file)
+					parseAndWriteMetadata(parser, change.file)
 				}
 			}
 		}
 	}
 
-	private fun parseAndWriteMetadata(classFile: File) {
-		val parser = PlugParser()
-		parser.parse(classFile)
-		if (parser.hasPlug()) {
+	private fun parseAndWriteMetadata(parser: PlugParser, classFile: File) {
+		val plugToSocket = parser.parse(classFile)
+		if (plugToSocket != null) {
 			// For example: write a single line containing the discovered plug FQN
-			val discoveredFile = discoveredPlugsDir.file(parser.plugClassName + ".txt").get().asFile
-			discoveredFile.parentFile.mkdirs()
-			discoveredFile.writeText(
-					parser.plugClassName!! + "|" + parser.socketClassName!!, StandardCharsets.UTF_8)
+			val discoveredFile = discoveredPlugsDir.file(classFile.nameWithoutExtension).get().asFile
+			if (discoveredFile.exists()) {
+				val existing = discoveredFile.readText().split("|")
+				check(existing[0] == plugToSocket.first) {
+					"You need to rename one of these plugs because they have the same classfile name: ${existing[0]} and $plugToSocket"
+				}
+			} else {
+				discoveredFile.parentFile.mkdirs()
+			}
+			discoveredFile.writeText(plugToSocket.let { "${it.first}|${it.second}" })
 		} else {
 			// If previously discovered, remove it
 			removeOldMetadata(classFile)
@@ -68,7 +73,7 @@ abstract class FindPlugsTask : DefaultTask() {
 
 	private fun removeOldMetadata(classFile: File) {
 		// Remove any discovered file for the old .class
-		val possibleName = classFile.nameWithoutExtension + ".txt"
+		val possibleName = classFile.nameWithoutExtension
 		val discoveredFile = discoveredPlugsDir.file(possibleName).get().asFile
 		if (discoveredFile.exists()) {
 			discoveredFile.delete()

@@ -26,7 +26,7 @@ import org.objectweb.asm.Type
 class PlugParser {
 	private var buffer = ByteArray(64 * 1024)
 
-	fun parse(file: File) {
+	fun parse(file: File): Pair<String, String>? {
 		val filelen = (file.length() + 1).toInt() // +1 prevents infinite loop
 		if (buffer.size < filelen) {
 			buffer = ByteArray(filelen)
@@ -42,18 +42,17 @@ class PlugParser {
 			}
 		}
 		val reader = ClassReader(buffer, 0, pos)
-		plugClassName = asmToJava(reader.className)
+		val plugClassName = asmToJava(reader.className)
+		this.plugClassName = plugClassName
 		socketClassName = null
+		// set socketClassName if there is an `@Plug`
 		reader.accept(
 				classVisitor, ClassReader.SKIP_FRAMES or ClassReader.SKIP_DEBUG or ClassReader.SKIP_CODE)
+		return socketClassName?.let { plugClassName to it }
 	}
 
-	fun hasPlug(): Boolean {
-		return socketClassName != null
-	}
-
-	var plugClassName: String? = null
-	var socketClassName: String? = null
+	private var plugClassName: String? = null
+	private var socketClassName: String? = null
 
 	private val classVisitor: ClassVisitor =
 			object : ClassVisitor(API) {
@@ -73,7 +72,7 @@ class PlugParser {
 			}
 
 	companion object {
-		fun asmToJava(className: String): String {
+		private fun asmToJava(className: String): String {
 			return className.replace("/", ".")
 		}
 
