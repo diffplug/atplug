@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 ### Changed
-- Bump all dependencies to latest.
+- Bump required JVM from 11 to 17. ([#63](https://github.com/diffplug/atplug/pull/63))
+- Detect Kotlin version rather than harcode it. ([#64](https://github.com/diffplug/atplug/pull/64))
 
 ## [1.1.1] - 2024-07-06
 ### Changed

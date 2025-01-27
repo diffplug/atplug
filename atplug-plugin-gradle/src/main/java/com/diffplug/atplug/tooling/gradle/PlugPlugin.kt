@@ -38,7 +38,11 @@ class PlugPlugin : Plugin<Project> {
 		project.plugins.apply(JavaPlugin::class.java)
 		val javaExtension = project.extensions.getByType(JavaPluginExtension::class.java)
 		val main = javaExtension.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-		val dep = project.dependencies.create("org.jetbrains.kotlin:kotlin-reflect:1.8.20")
+		val plugin =
+				project.plugins.findPlugin("org.jetbrains.kotlin.jvm")
+						as org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
+		val dep =
+				project.dependencies.create("org.jetbrains.kotlin:kotlin-reflect:${plugin.pluginVersion}")
 		val plugGenConfig =
 				project.configurations.create("plugGenerate") { plugGen: Configuration ->
 					plugGen.extendsFrom(
