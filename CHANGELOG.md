@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+
+## [1.2.0] - 2025-01-27
 ### Added
 - Cacheability, incremental task, and huge speed improvement. ([#66](https://github.com/diffplug/atplug/pull/66))
   - `plugGenerate` refactored into `plugFind` followed by `plugGenerate` 
