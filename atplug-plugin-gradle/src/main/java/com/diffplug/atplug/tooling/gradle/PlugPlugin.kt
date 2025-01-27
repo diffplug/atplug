@@ -51,7 +51,7 @@ class PlugPlugin : Plugin<Project> {
 				}
 
 		val findPlugsTask =
-				project.tasks.register("findPlugs", FindPlugsTask::class.java) {
+				project.tasks.register("plugFind", FindPlugsTask::class.java) {
 					it.classesFolders.setFrom(main.output.classesDirs)
 					it.discoveredPlugsDir.set(project.layout.buildDirectory.dir("foundPlugs"))
 					// dep on java
@@ -65,7 +65,7 @@ class PlugPlugin : Plugin<Project> {
 				}
 
 		val generatePlugsTask =
-				project.tasks.register("generatePlugs", PlugGenerateTask::class.java) {
+				project.tasks.register("plugGenerate", PlugGenerateTask::class.java) {
 					it.discoveredPlugsDir.set(findPlugsTask.flatMap { it.discoveredPlugsDir })
 					it.classesFolders.setFrom(main.output.classesDirs)
 					it.jarsToLinkAgainst.setFrom(plugGenConfig)
