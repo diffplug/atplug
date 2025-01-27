@@ -20,21 +20,21 @@ import java.io.File
 import java.util.*
 
 /** [PlugGenerator.PlugGenerator] in a [JavaExecable] form. */
-class PlugGeneratorJavaExecable(toSearch: List<File>?, toLinkAgainst: Set<File>?) : JavaExecable {
+class PlugGeneratorJavaExecable(
+		plugToSocket: Map<String, String>,
+		toSearch: List<File>,
+		toLinkAgainst: Set<File>
+) : JavaExecable {
 	// inputs
-	var toSearch: List<File>
-	var toLinkAgainst: Set<File>
+	var plugToSocket: Map<String, String> = LinkedHashMap(plugToSocket)
+	var toSearch: List<File> = ArrayList(toSearch)
+	var toLinkAgainst: Set<File> = LinkedHashSet(toLinkAgainst)
 
 	// outputs
 	@JvmField var atplugInf: SortedMap<String, String>? = null
 
-	init {
-		this.toSearch = ArrayList(toSearch)
-		this.toLinkAgainst = LinkedHashSet(toLinkAgainst)
-	}
-
 	override fun run() {
-		val metadataGen = PlugGenerator(toSearch, toLinkAgainst)
+		val metadataGen = PlugGenerator(plugToSocket, toSearch, toLinkAgainst)
 		atplugInf = metadataGen.atplugInf
 	}
 }

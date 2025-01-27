@@ -22,18 +22,18 @@ import java.lang.UnsatisfiedLinkError
 import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 import java.net.URLClassLoader
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
 import java.util.function.Function
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.memberFunctions
 
-class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: Set<File>) {
+class PlugGenerator
+internal constructor(
+		plugToSocket: Map<String, String>,
+		toSearches: List<File>,
+		toLinkAgainst: Set<File>
+) {
 	@JvmField val atplugInf: SortedMap<String, String> = TreeMap()
 
 	/** A cache from a plugin interface to a function that converts a class into its metadata. */
@@ -56,22 +56,7 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 				}!!
 						as KFunction<Function<Any, String>>
 		try {
-			val parser = PlugParser()
-			// walk toSearch, passing each classfile to load()
-			for (toSearch in toSearches) {
-				if (toSearch.isDirectory) {
-					Files.walkFileTree(
-							toSearch.toPath(),
-							object : SimpleFileVisitor<Path>() {
-								override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-									if (file.toString().endsWith(EXT_CLASS)) {
-										maybeGeneratePlugin(parser, file)
-									}
-									return FileVisitResult.CONTINUE
-								}
-							})
-				}
-			}
+			plugToSocket.forEach { (plug, socket) -> atplugInf[plug] = generatePlugin(plug, socket) }
 		} finally {
 			classLoader.close()
 			System.setProperty("atplug.generate", "")
@@ -82,18 +67,13 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 	 * Loads a class by its FQN. If it's concrete and implements a plugin, then we'll call
 	 * generatePlugin.
 	 */
-	private fun maybeGeneratePlugin(parser: PlugParser, path: Path) {
-		parser.parse(path.toFile())
-		if (!parser.hasPlug()) {
-			return
-		}
-		val plugClass = classLoader.loadClass(parser.plugClassName)
-		val socketClass = classLoader.loadClass(parser.socketClassName)
+	private fun generatePlugin(plugClassName: String, socketClassName: String): String {
+		val plugClass = classLoader.loadClass(plugClassName)
+		val socketClass = classLoader.loadClass(socketClassName)
 		require(!Modifier.isAbstract(plugClass.modifiers)) {
 			"Class $plugClass has @Plug($socketClass) but it is abstract."
 		}
-		val atplugInfContent = generatePlugin<Any, Any>(plugClass, socketClass)
-		atplugInf[plugClass.name] = atplugInfContent
+		return generatePlugin<Any, Any>(plugClass, socketClass)
 	}
 
 	private fun <SocketT, PlugT : SocketT> generatePlugin(
@@ -128,14 +108,18 @@ class PlugGenerator internal constructor(toSearches: List<File>, toLinkAgainst: 
 		 * Returns a Map from a plugin's name to its ATPLUG-INF content.
 		 *
 		 * @param toSearch a directory containing class files where we will look for plugin
-		 * implementations
+		 *   implementations
 		 * @param toLinkAgainst the classes that these plugins implementations need
 		 * @return a map from component name to is ATPLUG-INF string content
 		 */
-		fun generate(toSearch: List<File>, toLinkAgainst: Set<File>): SortedMap<String, String> {
+		fun generate(
+				plugToSocket: Map<String, String>,
+				toSearch: List<File>,
+				toLinkAgainst: Set<File>
+		): SortedMap<String, String> {
 			return try {
-				val ext = PlugGeneratorJavaExecable(toSearch, toLinkAgainst)
-				val metadataGen = PlugGenerator(ext.toSearch, ext.toLinkAgainst)
+				val ext = PlugGeneratorJavaExecable(plugToSocket, toSearch, toLinkAgainst)
+				val metadataGen = PlugGenerator(plugToSocket, ext.toSearch, ext.toLinkAgainst)
 				// save our results, with no reference to the guts of what happened inside PluginMetadataGen
 				metadataGen.atplugInf
 			} catch (e: Exception) {

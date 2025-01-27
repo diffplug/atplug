@@ -1,6 +1,9 @@
 # AtPlug releases
 
 ## [Unreleased]
+### Added
+- Cacheability, incremental task, and huge speed improvement. ([#66](https://github.com/diffplug/atplug/pull/66))
+  - `plugGenerate` refactored into `plugFind` followed by `plugGenerate` 
 ### Changed
 - Bump required JVM from 11 to 17. ([#63](https://github.com/diffplug/atplug/pull/63))
 - Detect Kotlin version rather than harcode it. ([#64](https://github.com/diffplug/atplug/pull/64))
