@@ -50,32 +50,37 @@ class PlugPlugin : Plugin<Project> {
 					plugGen.dependencies.add(dep)
 				}
 
-		// jar --dependsOn--> plugGenerate
-		val generateTask =
-				project.tasks.register<PlugGenerateTask>(GENERATE, PlugGenerateTask::class.java) {
-						task: PlugGenerateTask ->
-					task.setClassesFolders(main.output.classesDirs)
-					task.jarsToLinkAgainst.setFrom(plugGenConfig)
-					task.resourcesFolder = main.resources.sourceDirectories.singleFile
+		val findPlugsTask =
+				project.tasks.register("findPlugs", FindPlugsTask::class.java) {
+					it.classesFolders.setFrom(main.output.classesDirs)
+					it.discoveredPlugsDir.set(project.layout.buildDirectory.dir("foundPlugs"))
 					// dep on java
 					for (taskName in mutableListOf("compileJava", "compileKotlin")) {
 						try {
-							task.dependsOn(project.tasks.named(taskName))
+							it.dependsOn(project.tasks.named(taskName))
 						} catch (e: UnknownTaskException) {
-							// not a problem
+							// not a problem if we only have kotlin
 						}
 					}
 				}
-		project.tasks.named(JavaPlugin.JAR_TASK_NAME).configure { jarTaskUntyped: Task ->
-			val jarTask = jarTaskUntyped as Jar
-			val metadataTask = generateTask.get()
+
+		val generatePlugsTask =
+				project.tasks.register("generatePlugs", PlugGenerateTask::class.java) {
+					it.discoveredPlugsDir.set(findPlugsTask.flatMap { it.discoveredPlugsDir })
+					it.classesFolders.setFrom(main.output.classesDirs)
+					it.jarsToLinkAgainst.setFrom(plugGenConfig)
+					it.resourcesFolder = main.resources.sourceDirectories.singleFile
+					it.dependsOn(findPlugsTask)
+				}
+		project.tasks.named(JavaPlugin.JAR_TASK_NAME).configure {
+			val jarTask = it as Jar
+			val metadataTask = generatePlugsTask.get()
 			jarTask.inputs.dir(metadataTask.atplugInfFolder)
 			jarTask.doFirst(
-					"Set " + SERVICE_COMPONENT + " header",
-					SetServiceComponentHeader(metadataTask.atplugInfFolder))
+					"Set $SERVICE_COMPONENT header", SetServiceComponentHeader(metadataTask.atplugInfFolder))
 		}
 		project.tasks.named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME).configure { t: Task ->
-			t.dependsOn(generateTask)
+			t.dependsOn(generatePlugsTask)
 		}
 	}
 
@@ -93,7 +98,6 @@ class PlugPlugin : Plugin<Project> {
 	}
 
 	companion object {
-		const val GENERATE = "plugGenerate"
 		const val SERVICE_COMPONENT = "AtPlug-Component"
 		const val DOT_JSON = ".json"
 		const val ATPLUG_INF = "ATPLUG-INF/"

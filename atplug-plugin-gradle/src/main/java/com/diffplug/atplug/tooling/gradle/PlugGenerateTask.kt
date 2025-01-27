@@ -30,20 +30,15 @@ import java.util.jar.Manifest
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.JavaExec
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.jvm.toolchain.JavaLauncher
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.process.JavaForkOptions
+import org.gradle.work.Incremental
 import org.gradle.workers.ProcessWorkerSpec
 import org.gradle.workers.WorkerExecutor
 
@@ -51,6 +46,8 @@ abstract class PlugGenerateTask : DefaultTask() {
 	@get:Optional @get:Nested abstract val launcher: Property<JavaLauncher>
 
 	@get:Inject abstract val workerExecutor: WorkerExecutor
+
+	@get:InputDirectory abstract val discoveredPlugsDir: DirectoryProperty
 
 	@get:InputFiles @get:Classpath abstract val jarsToLinkAgainst: ConfigurableFileCollection
 
@@ -60,7 +57,7 @@ abstract class PlugGenerateTask : DefaultTask() {
 	val atplugInfFolder: File
 		get() = File(resourcesFolder, PlugPlugin.ATPLUG_INF)
 
-	@InputFiles var classesFolders: FileCollection? = null
+	@get:Incremental @get:InputFiles abstract val classesFolders: ConfigurableFileCollection
 
 	init {
 		this.outputs.upToDateWhen {
@@ -74,20 +71,36 @@ abstract class PlugGenerateTask : DefaultTask() {
 		launcher.set(service.launcherFor(spec))
 	}
 
-	fun setClassesFolders(files: Iterable<File>) {
-		// if we don't copy, Gradle finds an implicit dependency which
-		// forces us to depend on `classes` even though we don't
-		val copy: MutableList<File> = ArrayList()
-		for (file in files) {
-			copy.add(file)
-		}
-		classesFolders = project.files(copy)
-	}
-
 	@TaskAction
 	fun build() {
+		// 1) Collect the discovered classes
+		val discoveredFiles =
+				discoveredPlugsDir.get().asFile.listFiles().orEmpty().filter {
+					it.isFile && it.name.endsWith(".txt")
+				}
+
+		// Turn them into a list of (plugClass, socketClass)
+		val discoveredPlugs =
+				discoveredFiles
+						.map { file ->
+							val line = file.readText(StandardCharsets.UTF_8).trim()
+							val split = line.split("|")
+							check(split.size == 2) { "Malformed discovered line in ${file.name}: '$line'" }
+							val (plugClassName, socketClassName) = split
+							plugClassName to socketClassName
+						}
+						.toMap()
+
+		// 2) Use reflection logic, now that we have jarsToLinkAgainst, to produce final metadata
+		//    This is where you'd adapt the old PlugGenerator invocation, but no scanning is needed
+		if (discoveredPlugs.isEmpty()) {
+			// no discovered plugs
+			FileMisc.cleanDir(atplugInfFolder)
+			return
+		}
+
 		// generate the metadata
-		val result = generate()
+		val result = generate(discoveredPlugs)
 
 		// clean out the ATPLUG-INF folder, and put the map's content into the folder
 		FileMisc.cleanDir(atplugInfFolder)
@@ -138,9 +151,10 @@ abstract class PlugGenerateTask : DefaultTask() {
 		}
 	}
 
-	private fun generate(): SortedMap<String, String> {
+	private fun generate(discoveredPlugs: Map<String, String>): SortedMap<String, String> {
 		val input =
-				PlugGeneratorJavaExecable(ArrayList(classesFolders!!.files), jarsToLinkAgainst.files)
+				PlugGeneratorJavaExecable(
+						discoveredPlugs, ArrayList(classesFolders.files), jarsToLinkAgainst.files)
 		return if (launcher.isPresent) {
 			val workQueue =
 					workerExecutor.processIsolation { workerSpec: ProcessWorkerSpec ->

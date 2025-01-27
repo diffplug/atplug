@@ -33,6 +33,11 @@ class PlugGeneratorTest : ResourceHarness() {
 	fun generateMetadata() {
 		val maps =
 				PlugGenerator.generate(
+						mapOf(
+								"com.diffplug.atplug.Apple" to "com.diffplug.atplug.Fruit",
+								"com.diffplug.atplug.Orange" to "com.diffplug.atplug.Fruit",
+								"com.diffplug.atplug.Shape\$Circle" to "com.diffplug.atplug.Shape",
+								"com.diffplug.atplug.Shape\$Square" to "com.diffplug.atplug.Shape"),
 						listOf("java", "kotlin").map { File("../atplug-runtime/build/classes/$it/test") },
 						deps())
 		Assertions.assertEquals(
