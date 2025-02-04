@@ -5,6 +5,7 @@ import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileType
 import org.gradle.api.tasks.*
 import org.gradle.work.*
 
@@ -24,59 +25,71 @@ abstract class FindPlugsTask : DefaultTask() {
 
 	@TaskAction
 	fun findPlugs(inputChanges: InputChanges) {
-		// If not incremental, clear everything and rescan
-		if (!inputChanges.isIncremental) {
-			discoveredPlugsDir.get().asFile.deleteRecursively()
-		}
-
-		// Make sure our output directory exists
-		discoveredPlugsDir.get().asFile.mkdirs()
-
-		// For each changed file in classesFolders, determine if it has @Plug
 		val parser = PlugParser()
-		for (change in inputChanges.getFileChanges(classesFolders)) {
-			if (!change.file.name.endsWith(".class")) {
-				continue
+
+		// If not incremental, clear everything and rescan
+		if (inputChanges.isIncremental) {
+			discoveredPlugsDir.get().asFile.mkdirs()
+			for (change in inputChanges.getFileChanges(classesFolders)) {
+				if (!change.file.name.endsWith(".class")) {
+					continue
+				}
+				when (change.changeType) {
+					ChangeType.REMOVED -> {
+						// Remove old discovered data for this file
+						removeOldMetadata(change)
+					}
+					ChangeType.ADDED,
+					ChangeType.MODIFIED -> {
+						parseAndWriteMetadata(parser, change)
+					}
+				}
 			}
-			when (change.changeType) {
-				ChangeType.REMOVED -> {
-					// Remove old discovered data for this file
-					removeOldMetadata(change.file)
-				}
-				ChangeType.ADDED,
-				ChangeType.MODIFIED -> {
-					parseAndWriteMetadata(parser, change.file)
-				}
+		} else {
+			discoveredPlugsDir.get().asFile.deleteRecursively()
+			discoveredPlugsDir.get().asFile.mkdirs()
+			classesFolders.files.forEach { folder ->
+				folder
+						.walkTopDown()
+						.filter { it.isFile && it.name.endsWith(".class") }
+						.forEach { classFile ->
+							val relativePath = classFile.toRelativeString(folder)
+							parseAndWriteMetadata(
+									parser,
+									object : FileChange {
+										override fun getFile(): File = classFile
+
+										override fun getChangeType(): ChangeType = ChangeType.ADDED
+
+										override fun getFileType(): FileType = FileType.FILE
+
+										override fun getNormalizedPath(): String = relativePath
+									})
+						}
 			}
 		}
 	}
 
-	private fun parseAndWriteMetadata(parser: PlugParser, classFile: File) {
-		val plugToSocket = parser.parse(classFile)
+	private fun parseAndWriteMetadata(parser: PlugParser, change: FileChange) {
+		val plugToSocket = parser.parse(change.file)
 		if (plugToSocket != null) {
 			// For example: write a single line containing the discovered plug FQN
-			val discoveredFile = discoveredPlugsDir.file(classFile.nameWithoutExtension).get().asFile
-			if (discoveredFile.exists()) {
-				val existing = discoveredFile.readText().split("|")
-				check(existing[0] == plugToSocket.first) {
-					"You need to rename one of these plugs because they have the same classfile name: ${existing[0]} and $plugToSocket"
-				}
-			} else {
-				discoveredFile.parentFile.mkdirs()
-			}
+			val discoveredFile = discoveredPlugsDir.file(normalizePath(change)).get().asFile
 			discoveredFile.writeText(plugToSocket.let { "${it.first}|${it.second}" })
 		} else {
 			// If previously discovered, remove it
-			removeOldMetadata(classFile)
+			removeOldMetadata(change)
 		}
 	}
 
-	private fun removeOldMetadata(classFile: File) {
+	private fun removeOldMetadata(change: FileChange) {
 		// Remove any discovered file for the old .class
-		val possibleName = classFile.nameWithoutExtension
-		val discoveredFile = discoveredPlugsDir.file(possibleName).get().asFile
+		val discoveredFile = discoveredPlugsDir.file(normalizePath(change)).get().asFile
 		if (discoveredFile.exists()) {
 			discoveredFile.delete()
 		}
 	}
+
+	private fun normalizePath(change: FileChange) =
+			change.normalizedPath.removeSuffix(".class").replace("/", "_").replace("\\", "_")
 }
