@@ -41,42 +41,36 @@ abstract class FindPlugsTask : DefaultTask() {
 			when (change.changeType) {
 				ChangeType.REMOVED -> {
 					// Remove old discovered data for this file
-					removeOldMetadata(change.file)
+					removeOldMetadata(change)
 				}
 				ChangeType.ADDED,
 				ChangeType.MODIFIED -> {
-					parseAndWriteMetadata(parser, change.file)
+					parseAndWriteMetadata(parser, change, change.file)
 				}
 			}
 		}
 	}
 
-	private fun parseAndWriteMetadata(parser: PlugParser, classFile: File) {
+	private fun parseAndWriteMetadata(parser: PlugParser, change: FileChange, classFile: File) {
 		val plugToSocket = parser.parse(classFile)
 		if (plugToSocket != null) {
 			// For example: write a single line containing the discovered plug FQN
-			val discoveredFile = discoveredPlugsDir.file(classFile.nameWithoutExtension).get().asFile
-			if (discoveredFile.exists()) {
-				val existing = discoveredFile.readText().split("|")
-				check(existing[0] == plugToSocket.first) {
-					"You need to rename one of these plugs because they have the same classfile name: ${existing[0]} and $plugToSocket"
-				}
-			} else {
-				discoveredFile.parentFile.mkdirs()
-			}
+			val discoveredFile = discoveredPlugsDir.file(normalizePath(change)).get().asFile
 			discoveredFile.writeText(plugToSocket.let { "${it.first}|${it.second}" })
 		} else {
 			// If previously discovered, remove it
-			removeOldMetadata(classFile)
+			removeOldMetadata(change)
 		}
 	}
 
-	private fun removeOldMetadata(classFile: File) {
+	private fun removeOldMetadata(change: FileChange) {
 		// Remove any discovered file for the old .class
-		val possibleName = classFile.nameWithoutExtension
-		val discoveredFile = discoveredPlugsDir.file(possibleName).get().asFile
+		val discoveredFile = discoveredPlugsDir.file(normalizePath(change)).get().asFile
 		if (discoveredFile.exists()) {
 			discoveredFile.delete()
 		}
 	}
+
+	private fun normalizePath(change: FileChange) =
+			change.normalizedPath.removeSuffix(".class").replace("/", "_")
 }
