@@ -91,5 +91,5 @@ abstract class FindPlugsTask : DefaultTask() {
 	}
 
 	private fun normalizePath(change: FileChange) =
-			change.normalizedPath.removeSuffix(".class").replace("/", "_")
+			change.normalizedPath.removeSuffix(".class").replace("/", "_").replace("\\", "_")
 }
