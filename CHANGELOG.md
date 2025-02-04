@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+
+## [1.2.1] - 2025-02-04
 ### Fixed
 - `FindPlugsTask` had an up-to-date issue in projects with mixed Kotlin and Java. ([#68](https://github.com/diffplug/atplug/pull/68))
 
