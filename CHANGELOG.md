@@ -1,6 +1,8 @@
 # AtPlug releases
 
 ## [Unreleased]
+
+## [1.2.2] - 2025-05-27
 ### Fixed
 - `FindPlugsTask.classesFolders` changed from `@CompileClasspath` to `@Classpath`, hopefully fixing up-to-date problem. ([#79](https://github.com/diffplug/atplug/pull/79))
 
