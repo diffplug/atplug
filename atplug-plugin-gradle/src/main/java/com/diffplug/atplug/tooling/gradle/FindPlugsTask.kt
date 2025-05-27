@@ -15,10 +15,7 @@ import org.gradle.work.*
  */
 @CacheableTask
 abstract class FindPlugsTask : DefaultTask() {
-	@get:CompileClasspath
-	@get:Incremental
-	@get:InputFiles
-	abstract val classesFolders: ConfigurableFileCollection
+	@get:Classpath abstract val classesFolders: ConfigurableFileCollection
 
 	/** Directory where we will store discovered plugs. */
 	@get:OutputDirectory abstract val discoveredPlugsDir: DirectoryProperty
