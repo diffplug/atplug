@@ -38,7 +38,7 @@ subprojects {
 	} else if (it.name == 'atplug-test-harness') {
 		ext.maven_name='AtPlug test harness'
 		dependencies {
-			compileOnly "org.junit.jupiter:junit-jupiter-api:5.13.1"
+			compileOnly "org.junit.jupiter:junit-jupiter-api:5.13.2"
 			implementation "org.jetbrains.kotlin:kotlin-reflect:2.1.21"
 			implementation project(':atplug-runtime')
 		}
