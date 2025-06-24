@@ -16,7 +16,7 @@ allprojects {
 }
 apply from: 干.file('base/sonatype.gradle')
 
-String VER_JUNIT_JUPITER = '5.13.1'
+String VER_JUNIT_JUPITER = '5.13.2'
 subprojects {
 	apply from: 干.file('base/java.gradle')
 	apply from: 干.file('base/kotlin.gradle')
