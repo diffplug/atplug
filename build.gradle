@@ -33,7 +33,7 @@ subprojects {
 		ext.maven_name = 'AtPlug runtime'
 		apply plugin: 'kotlinx-serialization'
 		dependencies {
-			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
+			implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 		}
 	} else if (it.name == 'atplug-test-harness') {
 		ext.maven_name='AtPlug test harness'
