@@ -47,7 +47,7 @@ subprojects {
 		apply from: 干.file('base/gradle-plugin.gradle')
 		dependencies {
 			implementation "org.ow2.asm:asm:9.8"
-			implementation 'com.diffplug.gradle:goomph:4.3.0'
+			implementation 'com.diffplug.gradle:goomph:4.4.1'
 			implementation 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.21'
 			testImplementation 'org.assertj:assertj-core:3.27.3'
 		}
